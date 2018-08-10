@@ -6,6 +6,7 @@
 
 */
 let m = require('../_model/model.js')
+var path = require('path');
 export function post(req, res, next) {
   /*
     Body format :
@@ -27,11 +28,13 @@ export function post(req, res, next) {
 
   let fromChannel = m.seriesToChannel(migrateFromSeries)
   let toChannel = m.seriesToChannel(migrateToSeries)
-
-  if(m.checkFromSeriesExists(fromChannel)){
-    // influx was able to find the source data in influx db
-    ExportTask(fromChannel, toChannel);
-  } else {
-    //influx was not able to find the source series. End the migration job with error flag
-  }
+  m.checkChannelExists(fromChannel)
+  .then((exists) => {
+    if(exists) {
+      //begin exporting here
+      res.sendStatus(200)
+    } else {
+      res.sendStatus(500)
+    }
+  })
 }
