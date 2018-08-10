@@ -1,6 +1,11 @@
 let _ = require('underscore')
 let {influx} = require('./config.js')
+let ExportTask = require('./export_task.js');
+const Guid = require('guid');
 
+let migrateTasks = {};
+
+module.exports.migrateTasks = migrateTasks; // hashed dict of Promises
 module.exports.seriesToChannel = function(seriesName) {
   if(seriesName == ''){
     console.log("Series name is empty")
@@ -40,5 +45,19 @@ module.exports.checkChannelExists = function(channelObject) {
 
     })
   })
+}
 
+module.exports.createMigrateTask = function(fromChannel, toChannel) {
+  const guid = Guid.create().value;
+  let description = {}
+  description.guid = guid;
+  task = new MigrateTask(description, fromChannel, toChannel, influx);
+  if (task.summary.nSeries == 0 && task.summary.done == true) {
+    console.log('no series specified');
+    return null;
+  }
+  else {
+    migrateTasks[guid] = task;
+    return guid;
+  }
 }
