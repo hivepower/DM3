@@ -14,6 +14,7 @@ class MigrateTask {
     this.promise = Promise.resolve(summary)
     .then((d) => this.generateChunks(d))
     .then((d) => this.exportQuery(d, influx))
+    .then((fileContents) => this.writeFile(fileContents))
     .catch((err) => {
         this.summary = {
           done: true,
@@ -74,5 +75,11 @@ class MigrateTask {
           });
         })
       })
+    }
+
+    writeFile(fileContents, out_dir) {
+      return new Promise((writeFileResolve,rejectWrite) => {
+
+      }
     }
 }
