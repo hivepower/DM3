@@ -8,8 +8,8 @@ const app = express();
 app.use(express.json());
 app.use(sapper({manifest}))
 
-app.listen(3001, () => {
-	console.log("listening on port 3030")
+app.listen(3000, () => {
+	console.log("listening on port 3001")
 })
 //
 // polka() // You can also use Express

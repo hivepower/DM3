@@ -33,7 +33,6 @@ export function post(req, res, next) {
     if(exists) {
       //begin exporting here
       m.createMigrateTask(fromChannel, toChannel)
-
       res.sendStatus(200)
     } else {
       res.sendStatus(500)

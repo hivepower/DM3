@@ -1,6 +1,6 @@
 let _ = require('underscore')
 let {influx} = require('./config.js')
-let ExportTask = require('./export_task.js');
+let MigrateTask = require('./migrate_task.js');
 const Guid = require('guid');
 
 let migrateTasks = {};
@@ -30,8 +30,6 @@ module.exports.seriesToChannel = function(seriesName) {
 module.exports.checkChannelExists = function(channelObject) {
   // query the influx db and see if the channel exists
   return new Promise((resolve, reject) => {
-
-
     influx.query(`select count(*) from "${channelObject.measurement}" where "site"='${channelObject.site}' and "generator"='${channelObject.generator}'
     and "units"='${channelObject.units}' and "method"='${channelObject.method}' and "location"='${channelObject.location}' and "number"='${channelObject.number}'`)
     .then((res) => {
@@ -42,7 +40,6 @@ module.exports.checkChannelExists = function(channelObject) {
       } else {
         resolve(false)
       }
-
     })
   })
 }
@@ -51,13 +48,18 @@ module.exports.createMigrateTask = function(fromChannel, toChannel) {
   const guid = Guid.create().value;
   let description = {}
   description.guid = guid;
-  task = new MigrateTask(description, fromChannel, toChannel, influx);
-  if (task.summary.nSeries == 0 && task.summary.done == true) {
-    console.log('no series specified');
-    return null;
-  }
-  else {
-    migrateTasks[guid] = task;
-    return guid;
-  }
+  description.fromChannel = fromChannel
+  description.toChannel = toChannel
+  console.log(guid)
+  task = new MigrateTask(description, influx);
+  migrateTasks[guid] = task
+
+  // if (task.summary.nSeries == 0 && task.summary.done == true) {
+  //   console.log('no series specified');
+  //   return null;
+  // }
+  // else {
+  //   migrateTasks[guid] = task;
+  //   return guid;
+  // }
 }
