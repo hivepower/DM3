@@ -28,7 +28,9 @@ class MigrateTask {
       fromChannel : "",
       toChannel : "",
       chunks: [],
-      resultsData: []
+      resultsData: [],
+      totalChunks: 0,
+      remianingChunks: 0
     }
     this.summary.status = "Processing ..."
     this.summary.fromChannel = description.fromChannel
@@ -37,16 +39,6 @@ class MigrateTask {
     .then((d) => this.createChunksForMigration(d, influx)) // create a chunk array which has start and end dates
     .then((d) => this.beginMigration(d, influx)) // use the chunk array created in previous step and export each month data into CSV
 
-    // this.promise = Promise.resolve(summary)
-    // .then((d) => this.generateChunks(d))
-    // .then((d) => this.exportQuery(d, influx))
-    // .then((fileContents) => this.writeFile(fileContents))
-    // .catch((err) => {
-    //     this.summary = {
-    //       done: true,
-    //       status: err,
-    //     };
-    //   });
   }
 
   createChunksForMigration(summary, influx) {
@@ -77,6 +69,8 @@ class MigrateTask {
           });
           chunkStart = chunkEnd;
           chunkEnd = chunkEnd.plus({months:1})
+          summary.totalChunks += 1
+          summary.remianingChunks += 1
         } while(chunkEnd.valueOf() <= endDate.valueOf())
         summary.chunks = out_dates
         resolve(summary)
@@ -92,7 +86,7 @@ class MigrateTask {
       let fromChannel = summary.fromChannel
       let toChannel = summary.toChannel
       let tags = _.omit(toChannel, 'measurement')
-      let migrateDataPromise = []
+      let migrateDataPromise = Promise.resolve();
 
       console.log(tags)
       let chunks = summary.chunks
@@ -103,23 +97,78 @@ class MigrateTask {
         where site = '${fromChannel.site}' and generator = '${fromChannel.generator}' and method = '${fromChannel.method}'
         and location = '${fromChannel.location}' and number='${fromChannel.number}' and units = '${fromChannel.units}'
         and time >= '${startDate}' and time <= '${endDate}'group by *`;
-        
-        summary.currentQuery = q
-        let readPromise = influx.query(q)
-        readPromise.then((resultData) => {
-          let writePromise = new Promise((writeResolve, writeReject) => {
-            // write a friendly loop to display data
-            let finishMigrate = friendlyLoop(resultData, [], (idx, row, result) => {
-              result.push(row.time)
-              return result
-            })
-            finishMigrate.then(textRows => {
-              summary.resultsData.push(textRows)
+        summary.remianingChunks -= 1
+        migrateDataPromise = migrateDataPromise.then(() => {
+          var pending = [];
+          let readPromise = influx.query(q)
+          readPromise.then((resultData) => {
+            let writePromise = new Promise((writeResolve, writeReject) => {
+              // write a friendly loop to display data
+
+              /* resultData
+              { time:
+                { 2018-06-01T08:15:07.000Z
+                  _nanoISO: '2018-06-01T08:15:07Z',
+                  getNanoTime: [Function: getNanoTimeFromISO],
+                  toNanoISOString: [Function: toNanoISOStringFromISO] },
+               value: 2.459868,
+               generator: 'scada',
+               location: 'upstream',
+               method: 'mousehouse',
+               number: '1',
+               site: 'CSO-002',
+               units: 'in' },
+              */
+
+              let finishMigrate = friendlyLoop(resultData, [], (idx, row, result) => {
+                /*
+                [
+                  {
+                    measurement: 'tide',
+                    tags: {
+                      unit: 'in'
+                    },
+                    fields: { height: 123 }
+                  },
+                  {
+                    measurement: 'tide',
+                    tags: {
+                      unit: 'in'
+                    },
+                    fields: { height: 124 }
+                  }
+                ]
+                */
+                result.push({measurement: 'testMeasure',
+                tags: {
+                  number: row.number,
+                  units: row.units,
+                  generator: row.generator,
+                  site: 'WOOTWOOT'
+                }, fields: {value: row.value, time: row.time._nanoISO}
+              })
+                return result
+              })
+              let collector = finishMigrate.then(textRows => {
+                let importResults = friendlyLoop(textRows, [], (idx, row, result) => {
+                    result.push(influx.writePoints([row]))
+                    return result
+                })
+                importResults.then(() => {
+                  summary.status ="Almost Done ...."
+                })
+              })
+              
+              pending.push(collector)
             })
           })
+          return Promise.all(pending)
         })
+        // summary.currentQuery = q
       })
-      resolve()
+      migrateDataPromise.then(() => {
+        resolve()
+      })
     })
   }
   // testLargePromise(d) {
