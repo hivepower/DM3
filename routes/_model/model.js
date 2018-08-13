@@ -30,10 +30,12 @@ module.exports.seriesToChannel = function(seriesName) {
 module.exports.checkChannelExists = function(channelObject) {
   // query the influx db and see if the channel exists
   return new Promise((resolve, reject) => {
+    console.log(`select count(*) from "${channelObject.measurement}" where "site"='${channelObject.site}' and "generator"='${channelObject.generator}'
+    and "units"='${channelObject.units}' and "method"='${channelObject.method}' and "location"='${channelObject.location}' and "number"='${channelObject.number}'`)
+
     influx.query(`select count(*) from "${channelObject.measurement}" where "site"='${channelObject.site}' and "generator"='${channelObject.generator}'
     and "units"='${channelObject.units}' and "method"='${channelObject.method}' and "location"='${channelObject.location}' and "number"='${channelObject.number}'`)
     .then((res) => {
-      console.log(res[0].count_value)
       if(res[0].count_value > 0){
         //found channel
         resolve(true)
