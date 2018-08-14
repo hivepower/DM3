@@ -26,16 +26,22 @@ export function post(req, res, next) {
 
   console.log(new Date() + " /api/submitMigrationJob")
 
-  let fromChannel = m.seriesToChannel(migrateFromSeries)
-  let toChannel = m.seriesToChannel(migrateToSeries)
-  m.checkChannelExists(fromChannel)
-  .then((exists) => {
-    if(exists) {
-      //begin exporting here
-      m.createMigrateTask(fromChannel, toChannel)
-      res.sendStatus(200)
-    } else {
-      res.sendStatus(500)
-    }
+  Promise.all([m.seriesToChannel(migrateFromSeries), m.seriesToChannel(migrateToSeries)])
+  .then((channelObjects) => {
+    let fromChannel = channelObjects[0]
+    let toChannel = channelObjects[1]
+    
+    m.checkChannelExists(fromChannel)
+    .then((exists) => {
+      if(exists) {
+        //begin exporting here
+        m.createMigrateTask(fromChannel, toChannel)
+        res.sendStatus(200)
+      } else {
+        res.sendStatus(500)
+      }
+    })
   })
+
+
 }

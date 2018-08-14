@@ -28,7 +28,6 @@ class MigrateTask {
       fromChannel : "",
       toChannel : "",
       chunks: [],
-      resultsData: [],
       totalChunks: 0,
       remianingChunks: 0
     }
@@ -38,6 +37,12 @@ class MigrateTask {
     this.promise = Promise.resolve(this.summary)
     .then((d) => this.createChunksForMigration(d, influx)) // create a chunk array which has start and end dates
     .then((d) => this.beginMigration(d, influx)) // use the chunk array created in previous step and export each month data into CSV
+    .catch((err) => {
+      this.summary = {
+        done: true,
+        status: err
+      }
+    })
 
   }
 
@@ -79,17 +84,13 @@ class MigrateTask {
   }
 
   beginMigration(summary, influx) {
-    return new Promise((resolve, reject) => {
-      // here create a promise which calls export task and import task for each month ?
-      // console.log("calling begin migration")
-
-      let fromChannel = summary.fromChannel
-      let toChannel = summary.toChannel
+    return new Promise((migrationResolve, migrationReject) => {
+      // here create a promise which calls export task and import task for each month
+      let {fromChannel} = summary
+      let {toChannel} = summary
       let tags = _.omit(toChannel, 'measurement')
       let migrateDataPromise = Promise.resolve();
-
-      console.log(tags)
-      let chunks = summary.chunks
+      let {chunks} = summary
       _.each(chunks, (chunk) => {
         let startDate = chunk['start']
         let endDate = chunk['end']
@@ -97,89 +98,75 @@ class MigrateTask {
         where site = '${fromChannel.site}' and generator = '${fromChannel.generator}' and method = '${fromChannel.method}'
         and location = '${fromChannel.location}' and number='${fromChannel.number}' and units = '${fromChannel.units}'
         and time >= '${startDate}' and time <= '${endDate}'group by *`;
+
+        console.log(q)
+
         summary.remianingChunks -= 1
         migrateDataPromise = migrateDataPromise.then(() => {
-          var pending = [];
-          let readPromise = influx.query(q)
-          readPromise.then((resultData) => {
-            let writePromise = new Promise((writeResolve, writeReject) => {
-              // write a friendly loop to display data
-
-              /* resultData
-              { time:
-                { 2018-06-01T08:15:07.000Z
-                  _nanoISO: '2018-06-01T08:15:07Z',
-                  getNanoTime: [Function: getNanoTimeFromISO],
-                  toNanoISOString: [Function: toNanoISOStringFromISO] },
-               value: 2.459868,
-               generator: 'scada',
-               location: 'upstream',
-               method: 'mousehouse',
-               number: '1',
-               site: 'CSO-002',
-               units: 'in' },
-              */
-
-              let finishMigrate = friendlyLoop(resultData, [], (idx, row, result) => {
-                /*
-                [
-                  {
-                    measurement: 'tide',
-                    tags: {
-                      unit: 'in'
-                    },
-                    fields: { height: 123 }
-                  },
-                  {
-                    measurement: 'tide',
-                    tags: {
-                      unit: 'in'
-                    },
-                    fields: { height: 124 }
-                  }
-                ]
-                */
-                result.push({measurement: 'testMeasure',
-                tags: {
-                  number: row.number,
-                  units: row.units,
-                  generator: row.generator,
-                  site: 'WOOTWOOT'
-                }, fields: {value: row.value, time: row.time._nanoISO}
-              })
-                return result
-              })
-              let collector = finishMigrate.then(textRows => {
-                let importResults = friendlyLoop(textRows, [], (idx, row, result) => {
-                    result.push(influx.writePoints([row]))
-                    return result
-                })
-                importResults.then(() => {
-                  summary.status ="Almost Done ...."
-                })
-              })
-              
-              pending.push(collector)
-            })
-          })
-          return Promise.all(pending)
+          // var pending = [];
+          return influx.query(q)
+          .then((resultData) => this.createInfluxDBPoints(resultData))
+          .then((points) => this.writeDataToInflux(points, influx))
         })
-        // summary.currentQuery = q
       })
       migrateDataPromise.then(() => {
-        resolve()
-      })
+        summary.done = true
+        summary.status = "Completed"
+        migrationResolve()})
     })
   }
-  // testLargePromise(d) {
-  //   return new Promise((resolve, reject) => {
-  //     let wait = setTimeout(() => {
-  //       d.status = 'Complete'
-  //       clearTimeout(wait);
-  //       resolve('Promise A win!');
-  //     }, 10000)
-  //   })
-  // }
 
+  createInfluxDBPoints(resultData) {
+    /* resultData
+    { time:
+      { 2018-06-01T08:15:07.000Z
+        _nanoISO: '2018-06-01T08:15:07Z',
+        getNanoTime: [Function: getNanoTimeFromISO],
+        toNanoISOString: [Function: toNanoISOStringFromISO] },
+     value: 2.459868,
+     generator: 'scada',
+     location: 'upstream',
+     method: 'mousehouse',
+     number: '1',
+     site: 'CSO-002',
+     units: 'in' },
+    */
+    return friendlyLoop(resultData, [], (idx, row, result) => {
+      /* [{
+          measurement: 'tide',
+          tags: {
+            unit: 'in'
+          },
+          fields: { height: 123 }
+        },
+        {
+          measurement: 'tide',
+          tags: {
+            unit: 'in'
+          },
+          fields: { height: 124 }
+        }]*/
+      result.push({measurement: 'testMeasure',
+        tags: {
+          number: row.number,
+          units: row.units,
+          generator: row.generator,
+          site: 'WOOTWOOT'
+        },
+        fields: {value: row.value},
+        timestamp: row.time
+        })
+      return result
+    })
+  }
+
+  writeDataToInflux(points, influx)   {
+    return new Promise((writeResolve, writeReject) => {
+      influx.writePoints(points)
+      .then(() => writeResolve())
+      .catch((err) => writeReject(err))
+    })
+  }
 }
+
 module.exports = MigrateTask;
