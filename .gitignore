@@ -9,3 +9,4 @@ yarn-error.log
 /build/
 /app/manifest/
 cfg
+mydata.txt

@@ -29,7 +29,8 @@ class MigrateTask {
       toChannel : "",
       chunks: [],
       totalChunks: 0,
-      remianingChunks: 0
+      remianingChunks: 0,
+      writeChunksProcessed: 0
     }
     this.summary.status = "Processing ..."
     this.summary.fromChannel = description.fromChannel
@@ -99,20 +100,25 @@ class MigrateTask {
         and location = '${fromChannel.location}' and number='${fromChannel.number}' and units = '${fromChannel.units}'
         and time >= '${startDate}' and time <= '${endDate}'group by *`;
 
-        console.log(q)
 
-        summary.remianingChunks -= 1
         migrateDataPromise = migrateDataPromise.then(() => {
           // var pending = [];
-          return influx.query(q)
-          .then((resultData) => this.createInfluxDBPoints(resultData))
-          .then((points) => this.writeDataToInflux(points, influx))
+          return new Promise((resolve, reject) => {
+            influx.query(q)
+            .then((resultData) => this.createInfluxDBPoints(resultData))
+            .then((points) => this.writeDataToInflux(points, influx))
+            .then(() => resolve())
+            .catch((err) => {
+              console.log(err)
+              migrationReject(err)
+            })
+          })
         })
       })
       migrateDataPromise.then(() => {
         summary.done = true
         summary.status = "Completed"
-        migrationResolve()})
+        migrationResolve({'reallyDone':true})})
     })
   }
 
@@ -131,6 +137,9 @@ class MigrateTask {
      site: 'CSO-002',
      units: 'in' },
     */
+    this.summary.remianingChunks -= 1
+    // console.log("calling create points")
+    if(resultData.length > 0) {
     return friendlyLoop(resultData, [], (idx, row, result) => {
       /* [{
           measurement: 'tide',
@@ -146,26 +155,40 @@ class MigrateTask {
           },
           fields: { height: 124 }
         }]*/
-      result.push({measurement: 'testMeasure',
-        tags: {
-          number: row.number,
-          units: row.units,
-          generator: row.generator,
-          site: 'WOOTWOOT'
-        },
-        fields: {value: row.value},
-        timestamp: row.time
-        })
+
+          result.push({measurement: 'testMeasure',
+            tags: {
+              number: row.number,
+              units: row.units,
+              generator: row.generator,
+              site: 'WOOTWOOT'
+            },
+            fields: {value: row.value},
+            timestamp: row.time
+            })
+
+
       return result
     })
+  } else {
+    return null
+  }
   }
 
   writeDataToInflux(points, influx)   {
-    return new Promise((writeResolve, writeReject) => {
-      influx.writePoints(points)
-      .then(() => writeResolve())
-      .catch((err) => writeReject(err))
-    })
+    // console.log("calling write points")
+    this.summary.writeChunksProcessed += 1
+    if(points) {
+      return new Promise((writeResolve, writeReject) => {
+        influx.writePoints(points)
+        .then(() => {
+          this.summary.writeChunksProcessed += 1
+          writeResolve()
+        })
+        .catch((err) => writeReject(err))
+      })
+    }
+
   }
 }
 
