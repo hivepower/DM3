@@ -2,7 +2,7 @@
 	<title> Datalyzer Migration Tool </title>
 </svelte:head>
 
-<input style="margin-bottom:20px;" class="btn btn-primary" type="button" value="Refresh" />
+<input style="margin-bottom:20px;" class="btn btn-primary" type="button" value="Refresh" on:click="updateJobs()" />
 
 <br />
 
@@ -76,7 +76,7 @@
 	import jquery from 'jquery'
 	export default {
 		preload(req) {
-			return Promise.all([this.fetch('/api/getAllJobs').then(r => r.json()).then(jobList => {
+			return Promise.all([this.fetch('http://localhost:3030/api/getAllJobs').then(r => r.json()).then(jobList => {
 				return {jobList}
 			})
 		])
@@ -89,9 +89,23 @@
 			jobList: []
 		}
 	},
-		oncreate() {
-			console.log(this.get().jobList)
+
+	oncreate() {
+		console.log(this.get().jobList)
+	},
+
+	methods: {
+		updateJobs: function() {
+			fetch('http://localhost:3030/api/getAllJobs')
+			.then(r => r.json())
+			.then(jobList => {
+				this.set({jobList})
+				console.log(this.get().jobList)
+			})
 		}
+	}
+
+
 	}
 
 </script>

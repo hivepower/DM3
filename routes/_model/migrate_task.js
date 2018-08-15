@@ -42,10 +42,8 @@ class MigrateTask {
     .then((d) => this.createChunksForMigration(d, influx)) // create a chunk array which has start and end dates
     .then((d) => this.beginMigration(d, influx)) // use the chunk array created in previous step and export each month data into CSV
     .catch((err) => {
-      this.summary = {
-        done: true,
-        status: err
-      }
+      this.summary.done = true
+      this.summary.status = err
     })
 
   }
