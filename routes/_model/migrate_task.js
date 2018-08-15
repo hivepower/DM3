@@ -157,12 +157,12 @@ class MigrateTask {
           },
           fields: { height: 124 }
         }]*/
-          result.push({measurement: 'testMeasure',
+          result.push({measurement: this.summary.toChannel.measurement,
             tags: {
-              number: row.number,
-              units: row.units,
-              generator: row.generator,
-              site: 'WOOTWOOT'
+              number: this.summary.toChannel.number,
+              units: this.summary.toChannel.units,
+              generator: this.summary.toChannel.generator,
+              site: this.summary.toChannel.site
             },
             fields: {value: row.value},
             timestamp: row.time
