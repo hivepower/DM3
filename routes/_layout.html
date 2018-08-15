@@ -19,6 +19,12 @@
 	export default {
 		components: {
 			Nav: '../components/Nav.html'
+		},
+		oncreate() {
+			require('jquery');
+			require('popper.js');
+			require('bootstrap');
+			require('bootstrap/dist/css/bootstrap.min.css');
 		}
 	};
 </script>

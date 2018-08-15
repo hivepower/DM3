@@ -2,8 +2,95 @@
 	<title> Datalyzer Migration Tool </title>
 </svelte:head>
 
-<h2> Migration Jobs : </h2>
+<input style="margin-bottom:20px;" class="btn btn-primary" type="button" value="Refresh" />
+
+<br />
+
+<table class="table">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">Status</th>
+      <th scope="col">From series</th>
+      <th scope="col">To Series</th>
+			<th scope="col">Total chunks</th>
+			<th scope="col">Processed chunk</th>
+    </tr>
+  </thead>
+  <tbody>
+		{#if jobList}
+		{#each Object.entries(jobList) as job}
+			<tr>
+					<td class="vertical_center_align">
+						{job.summary.status}
+					</td>
+					<td class="wrap-col">
+						Measure={job.summary.fromChannel.measurement},
+						Site={job.summary.fromChannel.site}
+						Generator={job.summary.fromChannel.generator},
+						Units={job.summary.fromChannel.units},
+						Method={job.summary.fromChannel.method},
+						Location={job.summary.fromChannel.location},
+						Number={job.summary.fromChannel.number}
+					</td>
+					<td class="wrap-col">
+						Measure={job.summary.toChannel.measurement},
+						Site={job.summary.toChannel.site}
+						Generator={job.summary.toChannel.generator},
+						Units={job.summary.toChannel.units},
+						Method={job.summary.toChannel.method},
+						Location={job.summary.toChannel.location},
+						Number={job.summary.toChannel.number}
+					</td>
+					<td class="vertical_center_align">
+						job.summary.totalChunks
+					</td>
+					<td class="vertical_center_align">
+						job.summary.writeChunksProcessed
+					</td>
+			</tr>
+		{/each}
+		{:else}
+			<td colspan="6" class="text-center">
+				No data
+			</td>
+		{/if}
+  </tbody>
+</table>
 
 <style>
 
+.wrap-col {
+	vertical-align: middle;
+	word-wrap: break-word;
+	min-width: 160px;
+	max-width: 250px;
+}
+.vertical_center_align{
+	vertical-align: middle;
+}
 </style>
+
+<script>
+
+	import jquery from 'jquery'
+	export default {
+		preload(req) {
+			return Promise.all([this.fetch('/api/getAllJobs').then(r => r.json()).then(jobList => {
+				return {jobList}
+			})
+		])
+		.then(([jobList]) => {
+			return {...jobList}
+		})
+	},
+	data () {
+		return {
+			jobList: []
+		}
+	},
+		oncreate() {
+			console.log(this.get().jobList)
+		}
+	}
+
+</script>
