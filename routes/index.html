@@ -76,7 +76,7 @@
 	import jquery from 'jquery'
 	export default {
 		preload(req) {
-			return Promise.all([this.fetch('http://localhost:3030/api/getAllJobs').then(r => r.json()).then(jobList => {
+			return Promise.all([this.fetch('/api/getAllJobs').then(r => r.json()).then(jobList => {
 				return {jobList}
 			})
 		])
@@ -96,7 +96,7 @@
 
 	methods: {
 		updateJobs: function() {
-			fetch('http://localhost:3030/api/getAllJobs')
+			fetch('/api/getAllJobs')
 			.then(r => r.json())
 			.then(jobList => {
 				this.set({jobList})
