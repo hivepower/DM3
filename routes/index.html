@@ -19,33 +19,34 @@
   <tbody>
 		{#if jobList}
 		{#each Object.entries(jobList) as job}
+
 			<tr>
 					<td class="vertical_center_align">
-						{job.summary.status}
+						{job[1].summary.status}
 					</td>
 					<td class="wrap-col">
-						Measure={job.summary.fromChannel.measurement},
-						Site={job.summary.fromChannel.site}
-						Generator={job.summary.fromChannel.generator},
-						Units={job.summary.fromChannel.units},
-						Method={job.summary.fromChannel.method},
-						Location={job.summary.fromChannel.location},
-						Number={job.summary.fromChannel.number}
+						Measure={job[1].summary.fromChannel.measurement},
+						Site={job[1].summary.fromChannel.site}
+						Generator={job[1].summary.fromChannel.generator},
+						Units={job[1].summary.fromChannel.units},
+						Method={job[1].summary.fromChannel.method},
+						Location={job[1].summary.fromChannel.location},
+						Number={job[1].summary.fromChannel.number}
 					</td>
 					<td class="wrap-col">
-						Measure={job.summary.toChannel.measurement},
-						Site={job.summary.toChannel.site}
-						Generator={job.summary.toChannel.generator},
-						Units={job.summary.toChannel.units},
-						Method={job.summary.toChannel.method},
-						Location={job.summary.toChannel.location},
-						Number={job.summary.toChannel.number}
+						Measure={job[1].summary.toChannel.measurement},
+						Site={job[1].summary.toChannel.site}
+						Generator={job[1].summary.toChannel.generator},
+						Units={job[1].summary.toChannel.units},
+						Method={job[1].summary.toChannel.method},
+						Location={job[1].summary.toChannel.location},
+						Number={job[1].summary.toChannel.number}
 					</td>
 					<td class="vertical_center_align">
-						job.summary.totalChunks
+					{	job[1].summary.totalChunks}
 					</td>
 					<td class="vertical_center_align">
-						job.summary.writeChunksProcessed
+					{	job[1].summary.writeChunksProcessed}
 					</td>
 			</tr>
 		{/each}

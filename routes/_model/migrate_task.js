@@ -186,7 +186,6 @@ class MigrateTask {
       return new Promise((writeResolve, writeReject) => {
         influx.writePoints(points)
         .then(() => {
-          this.summary.writeChunksProcessed += 1
           writeResolve()
         })
         .catch((err) => writeReject(err))
