@@ -23,6 +23,7 @@ export function post(req, res, next) {
   let bodyData = req.body
   let migrateFromSeries = bodyData.from.seriesName;
   let migrateToSeries = bodyData.to.seriesName;
+  let {chunkSize} = bodyData
 
   console.log(new Date() + " /api/submitMigrationJob")
 
@@ -30,12 +31,12 @@ export function post(req, res, next) {
   .then((channelObjects) => {
     let fromChannel = channelObjects[0]
     let toChannel = channelObjects[1]
-    
+
     m.checkChannelExists(fromChannel)
     .then((exists) => {
       if(exists) {
         //begin exporting here
-        m.createMigrateTask(fromChannel, toChannel)
+        m.createMigrateTask(fromChannel, toChannel, chunkSize)
         res.sendStatus(200)
       } else {
         res.sendStatus(500)

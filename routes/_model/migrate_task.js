@@ -22,6 +22,7 @@ class MigrateTask {
   constructor(description, influx) {
     console.log("Migrate task created")
     this.guid = description.guid;
+    this.chunkSize = description.chunkSize
     this.summary ={
       done: false,
       status : "",
@@ -35,6 +36,7 @@ class MigrateTask {
     this.summary.status = "Processing ..."
     this.summary.fromChannel = description.fromChannel
     this.summary.toChannel = description.toChannel
+    // console.log(this.chunkSize)
     this.promise = Promise.resolve(this.summary)
     .then((d) => this.createChunksForMigration(d, influx)) // create a chunk array which has start and end dates
     .then((d) => this.beginMigration(d, influx)) // use the chunk array created in previous step and export each month data into CSV
@@ -67,14 +69,14 @@ class MigrateTask {
         endDate = values[1]
         endDate = DateTime.fromISO(endDate[0].time._nanoISO, {zone: 'utc'}).plus({months: 1}) // add one month to the end to make it complete
         let chunkStart = DateTime.fromISO(startDate[0].time._nanoISO, {zone: 'utc'}).set({day:1, hour:0, minute:0, seconds:0})
-        let chunkEnd = chunkStart.plus({months:1})
+        let chunkEnd = chunkStart.plus({seconds:this.chunkSize})
         do {
           out_dates.push({
             start: chunkStart,
             end: chunkEnd
           });
           chunkStart = chunkEnd;
-          chunkEnd = chunkEnd.plus({months:1})
+          chunkEnd = chunkEnd.plus({seconds:this.chunkSize})
           summary.totalChunks += 1
           summary.remianingChunks += 1
         } while(chunkEnd.valueOf() <= endDate.valueOf())
@@ -155,7 +157,6 @@ class MigrateTask {
           },
           fields: { height: 124 }
         }]*/
-
           result.push({measurement: 'testMeasure',
             tags: {
               number: row.number,

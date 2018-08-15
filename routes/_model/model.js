@@ -47,12 +47,13 @@ module.exports.checkChannelExists = function(channelObject) {
   })
 }
 
-module.exports.createMigrateTask = function(fromChannel, toChannel) {
+module.exports.createMigrateTask = function(fromChannel, toChannel, chunkSize) {
   const guid = Guid.create().value;
   let description = {}
   description.guid = guid;
   description.fromChannel = fromChannel
   description.toChannel = toChannel
+  description.chunkSize = chunkSize
   console.log(guid)
   task = new MigrateTask(description, influx);
   migrateTasks[guid] = task
