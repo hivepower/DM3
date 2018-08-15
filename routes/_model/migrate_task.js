@@ -37,6 +37,7 @@ class MigrateTask {
     this.summary.fromChannel = description.fromChannel
     this.summary.toChannel = description.toChannel
     // console.log(this.chunkSize)
+    // need to verify if there is data in the 
     this.promise = Promise.resolve(this.summary)
     .then((d) => this.createChunksForMigration(d, influx)) // create a chunk array which has start and end dates
     .then((d) => this.beginMigration(d, influx)) // use the chunk array created in previous step and export each month data into CSV
