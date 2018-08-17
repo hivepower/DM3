@@ -20,7 +20,7 @@ export function post(req, res, next) {
    }
   */
   //store the body
-  let bodyData = JSON.parse(req.body)
+  let bodyData = req.body
   let migrateFromSeries = bodyData.from.seriesName;
   let migrateToSeries = bodyData.to.seriesName;
   let {chunkSize} = bodyData

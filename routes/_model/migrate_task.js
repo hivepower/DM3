@@ -64,6 +64,7 @@ class MigrateTask {
       order by time desc limit 1`
 
       Promise.all([influx.query(getFirstDateInflux), influx.query(getEndDateInflux)]).then((values) => {
+
         startDate = values[0]
         endDate = values[1]
         endDate = DateTime.fromISO(endDate[0].time._nanoISO, {zone: 'utc'}).plus({months: 1}) // add one month to the end to make it complete
@@ -93,6 +94,22 @@ class MigrateTask {
       let tags = _.omit(toChannel, 'measurement')
       let migrateDataPromise = Promise.resolve();
       let {chunks} = summary
+      let tagsObj = {
+      number: this.summary.toChannel.number,
+      units: this.summary.toChannel.units,
+      generator: this.summary.toChannel.generator,
+      site: this.summary.toChannel.site
+      }
+      // the writepoints API will not work if there is a empty tag i.e : method=''
+      // Hence its best we build a list of tag to use it when creating Ipoints object
+      if(toChannel.location) {
+        tagsObj.location = this.summary.toChannel.location
+      }
+      if(toChannel.method) {
+        tagsObj.method = this.summary.toChannel.method
+      }
+      this.summary.tagsObj = tagsObj
+
       _.each(chunks, (chunk) => {
         let startDate = chunk['start']
         let endDate = chunk['end']
@@ -100,7 +117,6 @@ class MigrateTask {
         where site = '${fromChannel.site}' and generator = '${fromChannel.generator}' and method = '${fromChannel.method}'
         and location = '${fromChannel.location}' and number='${fromChannel.number}' and units = '${fromChannel.units}'
         and time >= '${startDate}' and time <= '${endDate}'group by *`;
-
 
         migrateDataPromise = migrateDataPromise.then(() => {
           // var pending = [];
@@ -156,15 +172,9 @@ class MigrateTask {
           },
           fields: { height: 124 }
         }]*/
+
           result.push({measurement: this.summary.toChannel.measurement,
-            tags: {
-              number: this.summary.toChannel.number,
-              units: this.summary.toChannel.units,
-              generator: this.summary.toChannel.generator,
-              site: this.summary.toChannel.site,
-              method: this.summary.toChannel.method,
-              location: this.summary.toChannel.location
-            },
+            tags: this.summary.tagsObj,
             fields: {value: row.value},
             timestamp: row.time
             })

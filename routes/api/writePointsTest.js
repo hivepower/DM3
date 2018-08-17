@@ -6,7 +6,8 @@ export function post(req, res, next) {
       {
         measurement: 'tide',
         tags: {
-          unit: 'in'
+          unit: 'in',
+          number: ''
         },
         fields: { height: 123 }
       },
