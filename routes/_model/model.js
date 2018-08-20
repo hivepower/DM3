@@ -34,9 +34,13 @@ module.exports.checkChannelExists = function(channelObject) {
     influx.query(`select count(*) from "${channelObject.measurement}" where "site"='${channelObject.site}' and "generator"='${channelObject.generator}'
     and "units"='${channelObject.units}' and "method"='${channelObject.method}' and "location"='${channelObject.location}' and "number"='${channelObject.number}'`)
     .then((res) => {
-      if( res[0] || res[0].count_value > 0 ){
-        //found channel
-        resolve(true)
+      if( res[0] ){
+        if(res[0].count_value > 0) {
+          //found channel
+          resolve(true)
+        } else {
+          resolve(false)
+        }
       } else {
         resolve(false)
       }
