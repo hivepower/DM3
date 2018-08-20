@@ -1,4 +1,4 @@
-from node:carbon-alpine
+from node
 
 COPY package*.json ./
 RUN npm i
