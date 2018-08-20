@@ -41,8 +41,9 @@ export function post(req, res, next) {
             res.statusMessage = "There is already data in destination channel! Migration failed !";
             res.status(400).end();
           } else {
-              m.createMigrateTask(fromChannel, toChannel, chunkSize)
-              res.sendStatus(200)
+              let guid = m.createMigrateTask(fromChannel, toChannel, chunkSize)
+              res.statusMessage = "Migrate task created, GUID: " + guid
+              res.status(200).end()
           }
         })
       } else {

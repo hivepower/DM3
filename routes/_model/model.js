@@ -60,7 +60,7 @@ module.exports.createMigrateTask = function(fromChannel, toChannel, chunkSize) {
   console.log(guid)
   task = new MigrateTask(description, influx);
   migrateTasks[guid] = task
-
+  return guid
   // if (task.summary.nSeries == 0 && task.summary.done == true) {
   //   console.log('no series specified');
   //   return null;
