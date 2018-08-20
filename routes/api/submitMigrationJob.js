@@ -37,14 +37,14 @@ export function post(req, res, next) {
         //there is data in source channel. check if there is data in destination if so dont migrate.
         m.checkChannelExists(toChannel).then((exists) => {
           if(exists){
-            res.status(500).send('There is already data in destination channel! Migration failed !')
+            res.status(500).send({error : 'There is already data in destination channel! Migration failed !'})
           } else {
               m.createMigrateTask(fromChannel, toChannel, chunkSize)
               res.sendStatus(200)
           }
         })
       } else {
-        res.status(500).send('The source channel cannot be found in the InfluxDB !')
+        res.status(200).send({error : 'The source channel cannot be found in the InfluxDB !'})
       }
     })
   })
