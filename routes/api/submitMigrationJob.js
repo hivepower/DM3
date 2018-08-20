@@ -38,7 +38,8 @@ export function post(req, res, next) {
         m.checkChannelExists(toChannel).then((exists) => {
           if(exists){
             console.log('There is already data in destination channel! Migration failed !')
-            res.status(500).send({error : 'There is already data in destination channel! Migration failed !'})
+            res.statusMessage = "There is already data in destination channel! Migration failed !";
+            res.status(400).end();
           } else {
               m.createMigrateTask(fromChannel, toChannel, chunkSize)
               res.sendStatus(200)
@@ -46,7 +47,8 @@ export function post(req, res, next) {
         })
       } else {
         console.log('The source channel cannot be found in the InfluxDB !');
-        res.status(500).send({error : 'The source channel cannot be found in the InfluxDB !'})
+        res.statusMessage = "The source channel cannot be found in the InfluxDB !";
+        res.status(400).end();
       }
     })
   })
