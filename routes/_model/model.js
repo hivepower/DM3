@@ -28,7 +28,7 @@ module.exports.seriesToChannel = function(seriesName) {
 
 }
 
-module.exports.checkChannelExists = function(channelObject) {
+module.exports.checkChannelExists = function(channelObject, influx) {
   // query the influx db and see if the channel exists
   return new Promise((resolve, reject) => {
     influx.query(`select count(*) from "${channelObject.measurement}" where "site"='${channelObject.site}' and "generator"='${channelObject.generator}'
@@ -50,7 +50,7 @@ module.exports.checkChannelExists = function(channelObject) {
 
 
 
-module.exports.createMigrateTask = function(fromChannel, toChannel, chunkSize) {
+module.exports.createMigrateTask = function(fromChannel, toChannel, chunkSize, influx) {
   const guid = Guid.create().value;
   let description = {}
   description.guid = guid;
