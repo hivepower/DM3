@@ -5,6 +5,7 @@
   If the new series is already in the influx db and has data in the given time range ! ERROR !! STOP DOING IT
 
 */
+const Influx = require('influx');
 let m = require('../_model/model.js')
 var path = require('path');
 export function post(req, res, next) {
@@ -24,16 +25,21 @@ export function post(req, res, next) {
   let migrateFromSeries = bodyData.from.seriesName;
   let migrateToSeries = bodyData.to.seriesName;
   let {chunkSize} = bodyData
-  let influxConnection = bodyData.schema
+  let influxConnection = "";
+
+  if(!bodyData.dbConfig) {
+    res.statusMessage = "Influx connection details missing in bodyData"
+    res.status(500).end()
+  } else {
+    influxConnection = new Influx.InfluxDB(bodyData.dbConfig);
+  }
+
 
   if(!migrateFromSeries || !migrateToSeries || !chunkSize) {
     res.statusMessage = "Body data is not complete. Make sure fromSeries, toSeries and chunkSize are set"
     res.status(500).end()
   }
-  if(!influxConnection) {
-    res.statusMessage = "Influx connection missing in bodyData"
-    res.status(500).end()
-  }
+
 
   console.log(new Date() + " /api/submitMigrationJob")
 

@@ -1,5 +1,5 @@
 let _ = require('underscore')
-let {influx} = require('./config.js')
+
 let MigrateTask = require('./migrate_task.js');
 const Guid = require('guid');
 
