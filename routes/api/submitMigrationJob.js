@@ -62,27 +62,32 @@ export function post(req, res, next) {
               console.log("Data found in destination ! Dropping series !")
               m.dropDestinationSeries(toChannel, influxConnection).then(() => {
                 let guid = m.createMigrateTask(fromChannel, toChannel, chunkSize, influxConnection)
+                res.stautsText = "Migrate task created, GUID: " + guid
                 res.status(200).send("Migrate task created, GUID: " + guid)
                 res.end()
               }).catch((err) => {
                 console.log("Error dropping points !" + err)
+                res.statusText = "Error dropping points !" + err
                 res.status(500).send(err)
                 res.end()
               })
             } else {
               console.log('There is already data in destination channel! Migration failed !')
+              res.statusText = "There is already data in destination channel! Migration failed !"
               res.status(400).send("There is already data in destination channel! Migration failed !");
               res.end()
             }
 
           } else {
               let guid = m.createMigrateTask(fromChannel, toChannel, chunkSize, influxConnection)
+              res.statusText = "Migrate task created, GUID: " + guid
               res.status(200).send("Migrate task created, GUID: " + guid)
               res.end()
           }
         })
       } else {
         console.log('The source channel cannot be found in the InfluxDB !');
+        res.statusText = "The source channel cannot be found in the InfluxDB !"
         res.status(400).send("The source channel cannot be found in the InfluxDB !")
         res.end()
       }

@@ -48,7 +48,7 @@ class MigrateTask {
     .then((d) => this.beginMigration(d, influx)) // use the chunk array created in previous step and export each month data into CSV
     .catch((err) => {
       this.summary.done = true
-      this.summary.status = err
+      this.summary.status = "ERROR : " +  err.message
     })
 
   }
@@ -184,7 +184,7 @@ class MigrateTask {
             fields: {value: row.value},
             timestamp: row.time
             })
-            numberOfPointsProcessed += 1
+            
 
       return result
     })
