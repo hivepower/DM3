@@ -61,12 +61,16 @@ module.exports.createMigrateTask = function(fromChannel, toChannel, chunkSize, i
   task = new MigrateTask(description, influx);
   migrateTasks[guid] = task
   return guid
-  // if (task.summary.nSeries == 0 && task.summary.done == true) {
-  //   console.log('no series specified');
-  //   return null;
-  // }
-  // else {
-  //   migrateTasks[guid] = task;
-  //   return guid;
-  // }
+}
+
+module.exports.dropDestinationSeries = function(toChannel, influx) {
+  return new Promise((resolve, reject) => {
+    influx.query(`drop series from "${toChannel.measurement}" where "site"='${toChannel.site}' and "generator"='${toChannel.generator}'
+    and "units"='${toChannel.units}' and "method"='${toChannel.method}' and "location"='${toChannel.location}' and "number"='${toChannel.number}'`)
+    .then(() => {
+      resolve(true)
+    }).catch((err) => {
+      reject(err)
+    })
+  })
 }

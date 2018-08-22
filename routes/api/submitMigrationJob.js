@@ -17,7 +17,10 @@ export function post(req, res, next) {
     	},
     	"to": {
     		seriesName : "level,site=FS-NB-001,generator=edit,units=in, method=,location=,number=1"
-    	}
+    	},
+      "chunkSize" "256000000" // time in seconds
+      "override_destination" : false // false by default
+      "delete_source_after_migration" : false //false by default
    }
   */
   //store the body
@@ -26,6 +29,7 @@ export function post(req, res, next) {
   let migrateToSeries = bodyData.to.seriesName;
   let {chunkSize} = bodyData
   let influxConnection = "";
+  let override_destination = bodyData.override_destination;
 
   if(!bodyData.dbConfig) {
     res.statusMessage = "Influx connection details missing in bodyData"
@@ -50,22 +54,37 @@ export function post(req, res, next) {
 
     m.checkChannelExists(fromChannel, influxConnection).then((exists) => {
       if(exists) {
-        //there is data in source channel. check if there is data in destination if so dont migrate.
+        //there is data in source channel. check if there is data in destination
         m.checkChannelExists(toChannel, influxConnection).then((exists) => {
           if(exists){
-            console.log('There is already data in destination channel! Migration failed !')
-            res.statusMessage = "There is already data in destination channel! Migration failed !";
-            res.status(400).end();
+            if(override_destination == true) {
+              //drop points here from the series and then call migrate data
+              console.log("Data found in destination ! Dropping series !")
+              m.dropDestinationSeries(toChannel, influxConnection).then(() => {
+                let guid = m.createMigrateTask(fromChannel, toChannel, chunkSize, influxConnection)
+                res.status(200).send("Migrate task created, GUID: " + guid)
+                res.end()
+              }).catch((err) => {
+                console.log("Error dropping points !" + err)
+                res.status(500).send(err)
+                res.end()
+              })
+            } else {
+              console.log('There is already data in destination channel! Migration failed !')
+              res.status(400).send("There is already data in destination channel! Migration failed !");
+              res.end()
+            }
+
           } else {
               let guid = m.createMigrateTask(fromChannel, toChannel, chunkSize, influxConnection)
-              res.statusMessage = "Migrate task created, GUID: " + guid
-              res.status(200).end()
+              res.status(200).send("Migrate task created, GUID: " + guid)
+              res.end()
           }
         })
       } else {
         console.log('The source channel cannot be found in the InfluxDB !');
-        res.statusMessage = "The source channel cannot be found in the InfluxDB !";
-        res.status(400).end();
+        res.status(400).send("The source channel cannot be found in the InfluxDB !")
+        res.end()
       }
     })
   })
