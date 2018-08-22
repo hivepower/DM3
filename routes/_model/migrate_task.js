@@ -29,6 +29,9 @@ class MigrateTask {
       fromChannel : "",
       toChannel : "",
       chunks: [],
+      createdOn: '',
+      completedOn: '',
+      numberOfPoints: -1,
       totalChunks: 0,
       remianingChunks: 0,
       writeChunksProcessed: 0
@@ -36,6 +39,8 @@ class MigrateTask {
     this.summary.status = "Processing ..."
     this.summary.fromChannel = description.fromChannel
     this.summary.toChannel = description.toChannel
+    this.summary.createdOn = moment().format()
+
     // console.log(this.chunkSize)
     // need to verify if there is data in the
     this.promise = Promise.resolve(this.summary)
@@ -135,6 +140,7 @@ class MigrateTask {
       migrateDataPromise.then(() => {
         summary.done = true
         summary.status = "Completed"
+        this.summary.completedOn = moment().format()
         migrationResolve({'reallyDone':true})})
     })
   }
