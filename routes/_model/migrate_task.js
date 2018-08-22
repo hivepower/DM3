@@ -1,6 +1,6 @@
 const { DateTime } = require('luxon');
 const _ = require('underscore')
-
+const moment = require('moment');
 
 let friendlyLoop = (data, initResult,work) => {
   return new Promise((resolve,reject) => {
@@ -31,7 +31,7 @@ class MigrateTask {
       chunks: [],
       createdOn: '',
       completedOn: '',
-      numberOfPoints: -1,
+      numberOfPointsProcessed: 0,
       totalChunks: 0,
       remianingChunks: 0,
       writeChunksProcessed: 0
@@ -184,7 +184,7 @@ class MigrateTask {
             fields: {value: row.value},
             timestamp: row.time
             })
-
+            numberOfPointsProcessed += 1
 
       return result
     })
