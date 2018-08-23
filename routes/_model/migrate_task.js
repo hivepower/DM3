@@ -139,14 +139,35 @@ class MigrateTask {
         })
       })
       migrateDataPromise.then(() => {
-        summary.done = true
-        summary.status = "Completed"
-      
         if(this.delete_source_after_migration) {
           console.log("Deleting source points ...")
+          this.deleteSourceSeries(fromChannel, influx).then((done) => {
+            if(done) {
+              summary.done = true
+              summary.status = "Completed"
+              this.summary.completedOn = moment().format()
+              migrationResolve({'reallyDone':true})
+            }
+          })
+        } else {
+          summary.done = true
+          summary.status = "Completed"
+          this.summary.completedOn = moment().format()
+          migrationResolve({'reallyDone':true})
         }
-        this.summary.completedOn = moment().format()
-        migrationResolve({'reallyDone':true})})
+        })
+    })
+  }
+
+  deleteSourceSeries(fromChannel, influx) {
+    return new Promise((resolve, reject) => {
+      influx.query(`drop series from "${fromChannel.measurement}" where "site"='${fromChannel.site}' and "generator"='${fromChannel.generator}'
+      and "units"='${fromChannel.units}' and "method"='${fromChannel.method}' and "location"='${fromChannel.location}' and "number"='${fromChannel.number}'`)
+      .then(() => {
+        resolve(true)
+      }).catch((err) => {
+        reject(err)
+      })
     })
   }
 
