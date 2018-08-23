@@ -8,7 +8,8 @@ Set environment variable PORT = 3030
 
 # API Specification
 * URL : POST - <serverip>/api/submitMigrationJob
-  DATA: BODY -
+  DATA:
+  In Post body
   ```
   {
 	   "from": {
@@ -22,15 +23,19 @@ Set environment variable PORT = 3030
        "delete_source_after_migration": "true" (or) "false" // after migration remove the series from source channel
   }
   ```
+  Description : <br />
   POST a job to the server to perform migration. The chunk size is in seconds which sets how much data must be moved in each iteration. If the job submission is successful a guid is generated which can be used to keep track of the job
 
-* URL : GET - <serverip>/api/getJobStatus
-  DATA: HEADERS
-    guid : <guid>
+<hr />
 
-  GET a detailed description of the JOB using the job guid.
+* URL : GET - <serverip>/api/getJobStatus <br />
+  DATA: In headers <br />
+    ` guid : <guid> `
 
+<br />  GET a detailed description of the JOB using the job guid.
+
+<hr />
 
 * URL : GET - <serverip>/api/getAllJobs
-
+  <br />
   GET all the jobs submitted
