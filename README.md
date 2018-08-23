@@ -17,7 +17,9 @@ Set environment variable PORT = 3030
 	    "to": {
 		     "seriesName" : "level,site=CSO-005,generator=scada,units=in,method=mousehouse,location=upstream,number=1"
 	     },
-	     "chunkSize" : 5256000
+	     "chunkSize" : 5256000 //time chunk in seconds
+       "override_destination" : "true" (or) "false" //if there is data in the destination override it
+       "delete_source_after_migration": "true" (or) "false" // after migration remove the series from source channel
   }
   ```
   POST a job to the server to perform migration. The chunk size is in seconds which sets how much data must be moved in each iteration. If the job submission is successful a guid is generated which can be used to keep track of the job
