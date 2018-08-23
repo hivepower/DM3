@@ -161,6 +161,9 @@ class MigrateTask {
 
   deleteSourceSeries(fromChannel, influx) {
     return new Promise((resolve, reject) => {
+      console.log(`drop series from "${fromChannel.measurement}" where "site"='${fromChannel.site}' and "generator"='${fromChannel.generator}'
+      and "units"='${fromChannel.units}' and "method"='${fromChannel.method}' and "location"='${fromChannel.location}' and "number"='${fromChannel.number}'`)
+      
       influx.query(`drop series from "${fromChannel.measurement}" where "site"='${fromChannel.site}' and "generator"='${fromChannel.generator}'
       and "units"='${fromChannel.units}' and "method"='${fromChannel.method}' and "location"='${fromChannel.location}' and "number"='${fromChannel.number}'`)
       .then(() => {
