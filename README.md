@@ -7,7 +7,7 @@ After submitting a job we get a GUID which can be used to keep track of.
 Set environment variable PORT = 3030
 
 # API Specification
-* URL : POST - <serverip>/api/submitMigrationJob
+* URL : POST - <serverip>/api/migrationJob
   DATA:
   In Post body
   ```
@@ -36,6 +36,6 @@ Set environment variable PORT = 3030
 
 <hr />
 
-* URL : GET - <serverip>/api/getAllJobs
+* URL : GET - <serverip>/api/migrationJob
   <br />
   GET all the jobs submitted
