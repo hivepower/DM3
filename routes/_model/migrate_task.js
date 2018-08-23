@@ -23,6 +23,7 @@ class MigrateTask {
     console.log("Migrate task created")
     this.guid = description.guid;
     this.chunkSize = description.chunkSize
+    this.delete_source_after_migration = description.delete_source_after_migration
     this.summary ={
       done: false,
       status : "",
@@ -140,6 +141,10 @@ class MigrateTask {
       migrateDataPromise.then(() => {
         summary.done = true
         summary.status = "Completed"
+        console.log(this.delete_source_after_migration)
+        if(this.delete_source_after_migration) {
+          console.log("Deleting source points ...")
+        }
         this.summary.completedOn = moment().format()
         migrationResolve({'reallyDone':true})})
     })
@@ -184,7 +189,7 @@ class MigrateTask {
             fields: {value: row.value},
             timestamp: row.time
             })
-            
+
 
       return result
     })

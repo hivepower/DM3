@@ -29,7 +29,8 @@ export function post(req, res, next) {
   let migrateToSeries = bodyData.to.seriesName;
   let {chunkSize} = bodyData
   let influxConnection = "";
-  let override_destination = bodyData.override_destination;
+  let override_destination = bodyData.override_destination? bodyData.override_destination : false // set to false if not set
+  let delete_source_after_migration = bodyData.delete_source_after_migration?  bodyData.delete_source_after_migration  : false // set to false if not set
 
   if(!bodyData.dbConfig) {
     res.statusMessage = "Influx connection details missing in bodyData"
@@ -61,7 +62,7 @@ export function post(req, res, next) {
               //drop points here from the series and then call migrate data
               console.log("Data found in destination ! Dropping series !")
               m.dropDestinationSeries(toChannel, influxConnection).then(() => {
-                let guid = m.createMigrateTask(fromChannel, toChannel, chunkSize, influxConnection)
+                let guid = m.createMigrateTask(fromChannel, toChannel, chunkSize, influxConnection, delete_source_after_migration)
                 res.stautsText = "Migrate task created, GUID: " + guid
                 res.status(200).send("Migrate task created, GUID: " + guid)
                 res.end()
@@ -79,7 +80,7 @@ export function post(req, res, next) {
             }
 
           } else {
-              let guid = m.createMigrateTask(fromChannel, toChannel, chunkSize, influxConnection)
+              let guid = m.createMigrateTask(fromChannel, toChannel, chunkSize, influxConnection, delete_source_after_migration)
               res.statusText = "Migrate task created, GUID: " + guid
               res.status(200).send("Migrate task created, GUID: " + guid)
               res.end()
