@@ -29,8 +29,8 @@ export function post(req, res, next) {
   let migrateToSeries = bodyData.to.seriesName;
   let {chunkSize} = bodyData
   let influxConnection = "";
-  let override_destination = bodyData.override_destination? bodyData.override_destination : false // set to false if not set
-  let delete_source_after_migration = bodyData.delete_source_after_migration?  bodyData.delete_source_after_migration  : false // set to false if not set
+  let override_destination = (bodyData.override_destination == 'true')
+  let delete_source_after_migration = (bodyData.delete_source_after_migration == 'true') // set to false if not set
 
   if(!bodyData.dbConfig) {
     res.statusMessage = "Influx connection details missing in bodyData"

@@ -141,7 +141,7 @@ class MigrateTask {
       migrateDataPromise.then(() => {
         summary.done = true
         summary.status = "Completed"
-        console.log(this.delete_source_after_migration)
+      
         if(this.delete_source_after_migration) {
           console.log("Deleting source points ...")
         }
