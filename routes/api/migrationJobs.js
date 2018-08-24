@@ -23,7 +23,7 @@ export function post (req, res, next) {
     let bodyData = req.body
     let migrateFromSeries = bodyData.from.seriesName;
     let migrateToSeries = bodyData.to.seriesName;
-    let {chunkSize} = bodyData
+    let chunkSize = parseInt(bodyData.chunkSize)
     let influxConnection = "";
     let override_destination = (bodyData.override_destination == 'true')
     let delete_source_after_migration = (bodyData.delete_source_after_migration == 'true') // set to false if not set

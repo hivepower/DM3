@@ -75,7 +75,7 @@ class MigrateTask {
         endDate = values[1]
         endDate = DateTime.fromISO(endDate[0].time._nanoISO, {zone: 'utc'}).plus({months: 1}) // add one month to the end to make it complete
         let chunkStart = DateTime.fromISO(startDate[0].time._nanoISO, {zone: 'utc'}).set({day:1, hour:0, minute:0, seconds:0})
-        let chunkEnd = chunkStart.plus({seconds:this.chunkSize})
+        let chunkEnd = chunkStart.plus({seconds: this.chunkSize})
         do {
           out_dates.push({
             start: chunkStart,
@@ -85,7 +85,7 @@ class MigrateTask {
           chunkEnd = chunkEnd.plus({seconds:this.chunkSize})
           summary.totalChunks += 1
           summary.remianingChunks += 1
-        } while(chunkEnd.valueOf() <= endDate.valueOf())
+        } while(chunkStart.valueOf() <= endDate.valueOf())
         summary.chunks = out_dates
         resolve(summary)
       })
@@ -163,7 +163,7 @@ class MigrateTask {
     return new Promise((resolve, reject) => {
       console.log(`drop series from "${fromChannel.measurement}" where "site"='${fromChannel.site}' and "generator"='${fromChannel.generator}'
       and "units"='${fromChannel.units}' and "method"='${fromChannel.method}' and "location"='${fromChannel.location}' and "number"='${fromChannel.number}'`)
-      
+
       influx.query(`drop series from "${fromChannel.measurement}" where "site"='${fromChannel.site}' and "generator"='${fromChannel.generator}'
       and "units"='${fromChannel.units}' and "method"='${fromChannel.method}' and "location"='${fromChannel.location}' and "number"='${fromChannel.number}'`)
       .then(() => {
