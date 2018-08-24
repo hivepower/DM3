@@ -95,10 +95,16 @@ export function post (req, res, next) {
 }
 
 export function get (req, res, next) {
-  if(req.params.guid) {
+  /*
+  there are 2 parts in get
+  1. You can get all the jobs ever ran on the server by the end point GET: /api/migrationJobs
+  2. You can get specific job details by GET: /api/migrationJobs?guid=<guid>
+  */
+
+  if(req.query.guid) {
     // the query is for a specific JOB ID so query only that
     console.log(new Date() + "GET: /api/migrationJob?guid=<>")
-    let guid = req.params.guid;
+    let guid = req.query.guid;
     let jobDetails = m.migrateTasks[guid]
     if(! jobDetails) {
       res.status(200).send("There is not job with that GUID")
