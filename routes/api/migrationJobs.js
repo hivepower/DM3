@@ -43,7 +43,6 @@ export function post (req, res, next) {
       res.end()
     }
 
-
     console.log(new Date() + "POST: /api/migrationJob")
 
     Promise.all([m.seriesToChannel(migrateFromSeries), m.seriesToChannel(migrateToSeries)])
@@ -96,6 +95,21 @@ export function post (req, res, next) {
 }
 
 export function get (req, res, next) {
-  console.log(new Date() + "GET: /api/migrationJob")
-  res.status(200).send(m.migrateTasks)
+  if(req.params.guid) {
+    // the query is for a specific JOB ID so query only that
+    console.log(new Date() + "GET: /api/migrationJob?guid=<>")
+    let guid = req.params.guid;
+    let jobDetails = m.migrateTasks[guid]
+    if(! jobDetails) {
+      res.status(200).send("There is not job with that GUID")
+      res.end()
+    } else {
+      res.status(200).send(m.migrateTasks[guid])
+      res.end()
+    }
+  } else {
+    console.log(new Date() + "GET: /api/migrationJob")
+    res.status(200).send(m.migrateTasks)
+  }
+
 }
