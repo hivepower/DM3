@@ -1,23 +1,31 @@
 const moment = require('moment');
-const fs = require('fs');
+const fs = require('fs-extra');
 
 export function get(req, res, next) {
-  let startDate = moment()
-  console.log(new Date() + "/api/creteFakeData")
+  let endDate = moment()
 
-  console.log(startDate)
-  startDate = startDate.subtract(8, 'months')
+  let startDate =  new moment().subtract(6, 'months');
+  console.log(startDate.month())
+  console.log(endDate.month())
+  let stream = fs.createWriteStream('mydata.txt', {'flags': 'a'})
 
-  let file = fs.createWriteStream('mydata.txt')
-  let tempDate = startDate.month() + 8
-  do {
-      file.write("level,"+ "site=CSO-002,generator=scada,units=in,method=mousehouse,location=upstream,number=1"+ " value="+ Math.random() + " "+startDate.unix() + '\n')
-      startDate = startDate.add(30, 'minutes')
-  } while(startDate.month() <= tempDate)
+  stream.on('drain', function() {
+    console.log("calling drain")
+    writeData(stream, startDate, endDate);
+  })
 
-  file.on('finish', () => {
+  stream.on('finish', () => {
       console.log('wrote all data to file');
+      res.status(200).end()
   });
-  file.end()
-  res.sendStatus(200)
+
+  writeData(stream, startDate, endDate);
+}
+
+function writeData (stream, startDate, tempDate) {
+  do {
+      stream.write("level,"+ "site=CSO-002,generator=scada,units=in,method=mousehouse,location=upstream,number=1"+ " value="+ Math.random() + " "+startDate.unix() + '\n')
+      startDate = startDate.add(5, 'minutes')
+  } while(startDate.month() <= tempDate.month())
+  stream.end()
 }
