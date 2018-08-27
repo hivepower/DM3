@@ -105,7 +105,7 @@ export function get (req, res, next) {
     // the query is for a specific JOB ID so query only that
     console.log(new Date() + "GET: /api/migrationJob?guid=<>")
     let guid = req.query.guid;
-    let jobDetails = m.migrateTasks[guid]
+    let jobDetails = m.migrateTasks[guid].summary
     if(! jobDetails) {
       res.status(200).send("There is not job with that GUID")
       res.end()
