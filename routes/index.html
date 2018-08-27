@@ -17,39 +17,39 @@
     </tr>
   </thead>
   <tbody>
-		{#if jobList}
-		{#each Object.entries(jobList) as job}
+		{#if Object.keys(jobList).length > 0}
+			{#each Object.entries(jobList) as job}
 
-			<tr>
-					<td class="vertical_center_align">
-						{job[1].summary.status}
-					</td>
-					<td class="wrap-col">
-						Measure={job[1].summary.fromChannel.measurement},
-						Site={job[1].summary.fromChannel.site}
-						Generator={job[1].summary.fromChannel.generator},
-						Units={job[1].summary.fromChannel.units},
-						Method={job[1].summary.fromChannel.method},
-						Location={job[1].summary.fromChannel.location},
-						Number={job[1].summary.fromChannel.number}
-					</td>
-					<td class="wrap-col">
-						Measure={job[1].summary.toChannel.measurement},
-						Site={job[1].summary.toChannel.site}
-						Generator={job[1].summary.toChannel.generator},
-						Units={job[1].summary.toChannel.units},
-						Method={job[1].summary.toChannel.method},
-						Location={job[1].summary.toChannel.location},
-						Number={job[1].summary.toChannel.number}
-					</td>
-					<td class="vertical_center_align">
-					{	job[1].summary.totalChunks}
-					</td>
-					<td class="vertical_center_align">
-					{	job[1].summary.writeChunksProcessed}
-					</td>
-			</tr>
-		{/each}
+				<tr>
+						<td class="vertical_center_align">
+							{job[1].summary.status}
+						</td>
+						<td class="wrap-col">
+							Measure={job[1].summary.fromChannel.measurement},
+							Site={job[1].summary.fromChannel.site}
+							Generator={job[1].summary.fromChannel.generator},
+							Units={job[1].summary.fromChannel.units},
+							Method={job[1].summary.fromChannel.method},
+							Location={job[1].summary.fromChannel.location},
+							Number={job[1].summary.fromChannel.number}
+						</td>
+						<td class="wrap-col">
+							Measure={job[1].summary.toChannel.measurement},
+							Site={job[1].summary.toChannel.site}
+							Generator={job[1].summary.toChannel.generator},
+							Units={job[1].summary.toChannel.units},
+							Method={job[1].summary.toChannel.method},
+							Location={job[1].summary.toChannel.location},
+							Number={job[1].summary.toChannel.number}
+						</td>
+						<td class="vertical_center_align">
+						{	job[1].summary.totalChunks}
+						</td>
+						<td class="vertical_center_align">
+						{	job[1].summary.writeChunksProcessed}
+						</td>
+				</tr>
+			{/each}
 		{:else}
 			<td colspan="6" class="text-center">
 				No data
@@ -75,15 +75,6 @@
 
 	import jquery from 'jquery'
 	export default {
-		preload(req) {
-			return Promise.all([this.fetch('/api/getAllJobs').then(r => r.json()).then(jobList => {
-				return {jobList}
-			})
-		])
-		.then(([jobList]) => {
-			return {...jobList}
-		})
-	},
 	data () {
 		return {
 			jobList: []
@@ -91,16 +82,19 @@
 	},
 
 	oncreate() {
-		console.log(this.get().jobList)
+		fetch('/api/migrationJobs')
+    .then(r => r.json())
+    .then(jobList => {
+      this.set({jobList})
+    })
 	},
 
 	methods: {
 		updateJobs: function() {
-			fetch('/api/getAllJobs')
+			fetch('/api/migrationJobs')
 			.then(r => r.json())
 			.then(jobList => {
 				this.set({jobList})
-				console.log(this.get().jobList)
 			})
 		}
 	}
