@@ -1,7 +1,7 @@
 const Influx = require('influx');
 let m = require('../_model/model.js')
 var path = require('path');
-
+const _ = require('underscore')
 
 export function post (req, res, next) {
 
@@ -105,17 +105,23 @@ export function get (req, res, next) {
     // the query is for a specific JOB ID so query only that
     console.log(new Date() + "GET: /api/migrationJob?guid=<>")
     let guid = req.query.guid;
-    let jobDetails = m.migrateTasks[guid].summary
+    let jobDetails = m.migrateTasks[guid]
+
     if(! jobDetails) {
       res.status(200).send("There is not job with that GUID")
       res.end()
     } else {
+      jobDetails = _.omit(jobDetails, 'chunks')
       res.status(200).send(m.migrateTasks[guid])
       res.end()
     }
   } else {
     console.log(new Date() + "GET: /api/migrationJob")
-    res.status(200).send(m.migrateTasks)
+    let resObj = {}
+    _.each(m.migrateTasks, (task) => {
+      resObj[task.guid] = _.omit(task, 'chunks')
+    })
+    res.status(200).send(resObj)
   }
 
 }
