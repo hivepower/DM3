@@ -24,12 +24,12 @@ class MigrateTask {
     this.guid = description.guid;
     this.chunkSize = description.chunkSize
     this.delete_source_after_migration = description.delete_source_after_migration
+    this.chunks = []
     this.summary ={
       done: false,
       status : "",
       fromChannel : "",
       toChannel : "",
-      chunks: [],
       createdOn: '',
       completedOn: '',
       numberOfPointsProcessed: 0,
@@ -74,7 +74,7 @@ class MigrateTask {
         startDate = values[0]
         endDate = values[1]
         endDate = DateTime.fromISO(endDate[0].time._nanoISO, {zone: 'utc'}).plus({months: 1}) // add one month to the end to make it complete
-        let chunkStart = DateTime.fromISO(startDate[0].time._nanoISO, {zone: 'utc'}).set({day:1, hour:0, minute:0, seconds:0})
+        let chunkStart = DateTime.fromISO(startDate[0].time._nanoISO, {zone: 'utc'}).set({day:1, hour:0, minute:0, seconds:0}) // set to start of the month
         let chunkEnd = chunkStart.plus({seconds: this.chunkSize})
         do {
           out_dates.push({
@@ -86,7 +86,7 @@ class MigrateTask {
           summary.totalChunks += 1
           summary.remianingChunks += 1
         } while(chunkStart.valueOf() <= endDate.valueOf())
-        summary.chunks = out_dates
+        this.chunks = out_dates
         resolve(summary)
       })
     })
@@ -99,7 +99,7 @@ class MigrateTask {
       let {toChannel} = summary
       let tags = _.omit(toChannel, 'measurement')
       let migrateDataPromise = Promise.resolve();
-      let {chunks} = summary
+      let chunks = this.chunks
       let tagsObj = {
       number: this.summary.toChannel.number,
       units: this.summary.toChannel.units,
