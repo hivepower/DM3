@@ -15,18 +15,8 @@ module.exports.createJobDescription = function(fromChannel, toChannel, chunkSize
   description.chunkSize = chunkSize
   description.delete_source_after_migration = delete_source_after_migration
   description.summary = {}
-  let summary ={
-    done: false,
-    status : "",
-    fromChannel : "",
-    toChannel : "",
-    createdOn: '',
-    completedOn: '',
-    numberOfPointsProcessed: 0,
-    totalChunks: 0,
-    remianingChunks: 0,
-    writeChunksProcessed: 0
-  }
+  description.summary.totalChunks = 0
+  description.summary.writeChunksProcessed = 0
   description.summary.status = "Task Created ..."
   description.summary.fromChannel = fromChannel
   description.summary.toChannel = toChannel
