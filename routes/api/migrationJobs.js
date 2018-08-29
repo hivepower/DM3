@@ -84,9 +84,9 @@ export function post (req, res, next) {
             }
           })
         } else {
-          console.log('The source channel cannot be found in the InfluxDB !');
-          res.statusText = "The source channel cannot be found in the InfluxDB !"
-          res.status(400).send("The source channel cannot be found in the InfluxDB !")
+          console.log('There is no data in the source channel !');
+          res.statusText = "There is no data in the source channel !"
+          res.status(200).send("There is no data in the source channel !")
           res.end()
         }
       })
