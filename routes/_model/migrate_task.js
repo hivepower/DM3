@@ -40,7 +40,7 @@ class MigrateTask {
     this.summary.status = "Processing ..."
     this.summary.fromChannel = fromChannel
     this.summary.toChannel = toChannel
-    this.summary.createdOn = moment().format()
+    this.summary.createdOn = moment().format('YYYY MMMM Do, h:mm:ss a')
 
     // console.log(this.chunkSize)
     // need to verify if there is data in the
@@ -145,14 +145,14 @@ class MigrateTask {
             if(done) {
               summary.done = true
               summary.status = "Completed"
-              this.summary.completedOn = moment().format()
+              this.summary.completedOn = moment().format('YYYY MMMM Do, h:mm:ss a')
               migrationResolve({'reallyDone':true})
             }
           })
         } else {
           summary.done = true
           summary.status = "Completed"
-          this.summary.completedOn = moment().format()
+          this.summary.completedOn = moment().format('YYYY MMMM Do, h:mm:ss a')
           migrationResolve({'reallyDone':true})
         }
         })

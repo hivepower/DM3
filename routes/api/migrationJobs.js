@@ -102,7 +102,7 @@ export function get (req, res, next) {
   1. You can get all the jobs ever ran on the server by the end point GET: /api/migrationJobs
   2. You can get specific job details by GET: /api/migrationJobs?guid=<guid>
   */
-  console.log("WOOT")
+
   if(req.query.guid) {
     // the query is for a specific JOB ID so query only that
     console.log(new Date() + "GET: /api/migrationJob?guid=<>")
@@ -120,10 +120,12 @@ export function get (req, res, next) {
   } else {
     console.log(new Date() + "GET: /api/migrationJob")
     let resObj = {}
-
-    for (const [key, value] of Object.entries(m.migrateTasks)) {
-      resObj[key] = _.omit(value, 'chunks')
+    let objLength = Object.keys(m.migrateTasks).length // there are n objects in this dictonary
+    //iterate from the last object to the oldest
+    for(let i = objLength-1 ; i >= 0 ; i--) {
+        resObj[Object.keys(m.migrateTasks)[i]] = _.omit(Object.values(m.migrateTasks)[i], 'chunks')
     }
+
     res.status(200).send(resObj)
   }
 

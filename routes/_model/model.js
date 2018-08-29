@@ -20,7 +20,7 @@ module.exports.createJobDescription = function(fromChannel, toChannel, chunkSize
   description.summary.status = "Task Created ..."
   description.summary.fromChannel = fromChannel
   description.summary.toChannel = toChannel
-  description.summary.createdOn = moment().format()
+  description.summary.createdOn = moment().format('YYYY MMMM Do, h:mm:ss a')
   description.summary.completedOn = "NA"
   migrateTasks[guid] = description
   return description
