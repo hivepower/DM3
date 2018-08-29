@@ -4,7 +4,7 @@ var path = require('path');
 const _ = require('underscore')
 
 export function post (req, res, next) {
-
+    console.log(new Date() + "POST: /api/migrationJob")
     /*
       Body format :
       {
@@ -43,12 +43,15 @@ export function post (req, res, next) {
       res.end()
     }
 
-    console.log(new Date() + "POST: /api/migrationJob")
+
+
 
     Promise.all([m.seriesToChannel(migrateFromSeries), m.seriesToChannel(migrateToSeries)])
     .then((channelObjects) => {
       let fromChannel = channelObjects[0]
       let toChannel = channelObjects[1]
+
+      let jobDescription = m.createJobDescription(fromChannel, toChannel, chunkSize, influxConnection, delete_source_after_migration)
 
       m.checkChannelExists(fromChannel, influxConnection).then((exists) => {
         if(exists) {
@@ -59,34 +62,33 @@ export function post (req, res, next) {
                 //drop points here from the series and then call migrate data
                 console.log("Data found in destination ! Dropping series !")
                 m.dropDestinationSeries(toChannel, influxConnection).then(() => {
-                  let guid = m.createMigrateTask(fromChannel, toChannel, chunkSize, influxConnection, delete_source_after_migration)
-                  res.stautsText = "Migrate task created, GUID: " + guid
+                  let guid = m.createMigrateTask(fromChannel, toChannel, influxConnection, jobDescription)
                   res.status(200).send("Migrate task created, GUID: " + guid)
                   res.end()
                 }).catch((err) => {
                   console.log("Error dropping points !" + err)
-                  res.statusText = "Error dropping points !" + err
+                  m.migrateTasks[jobDescription.guid].summary.status = "Error dropping points !" + err
                   res.status(500).send(err)
                   res.end()
                 })
               } else {
                 console.log('There is already data in destination channel! Migration failed !')
-                res.statusText = "There is already data in destination channel! Migration failed !"
-                res.status(400).send("There is already data in destination channel! Migration failed !");
+                m.migrateTasks[jobDescription.guid].summary.status = "There is already data in destination channel! Migration failed !"
+                res.status(400).send("There is already data in destination channel! Migration failed ! GUID : " + jobDescription.guid);
                 res.end()
               }
 
             } else {
-                let guid = m.createMigrateTask(fromChannel, toChannel, chunkSize, influxConnection, delete_source_after_migration)
-                res.statusText = "Migrate task created, GUID: " + guid
+                let guid = m.createMigrateTask(fromChannel, toChannel, influxConnection, jobDescription)
+
                 res.status(200).send("Migrate task created, GUID: " + guid)
                 res.end()
             }
           })
         } else {
           console.log('There is no data in the source channel !');
-          res.statusText = "There is no data in the source channel !"
-          res.status(200).send("There is no data in the source channel !")
+          m.migrateTasks[jobDescription.guid].summary.status = "There is no data in the source channel !"
+          res.status(200).send("There is no data in the source channel ! GUID : " + jobDescription.guid)
           res.end()
         }
       })
@@ -100,7 +102,7 @@ export function get (req, res, next) {
   1. You can get all the jobs ever ran on the server by the end point GET: /api/migrationJobs
   2. You can get specific job details by GET: /api/migrationJobs?guid=<guid>
   */
-
+  console.log("WOOT")
   if(req.query.guid) {
     // the query is for a specific JOB ID so query only that
     console.log(new Date() + "GET: /api/migrationJob?guid=<>")
@@ -118,9 +120,10 @@ export function get (req, res, next) {
   } else {
     console.log(new Date() + "GET: /api/migrationJob")
     let resObj = {}
-    _.each(m.migrateTasks, (task) => {
-      resObj[task.guid] = _.omit(task, 'chunks')
-    })
+
+    for (const [key, value] of Object.entries(m.migrateTasks)) {
+      resObj[key] = _.omit(value, 'chunks')
+    }
     res.status(200).send(resObj)
   }
 

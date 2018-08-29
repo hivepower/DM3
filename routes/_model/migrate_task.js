@@ -19,7 +19,7 @@ let friendlyLoop = (data, initResult,work) => {
 };
 
 class MigrateTask {
-  constructor(description, influx) {
+  constructor(fromChannel, toChannel, description, influx) {
     console.log("Migrate task created")
     this.guid = description.guid;
     this.chunkSize = description.chunkSize
@@ -38,8 +38,8 @@ class MigrateTask {
       writeChunksProcessed: 0
     }
     this.summary.status = "Processing ..."
-    this.summary.fromChannel = description.fromChannel
-    this.summary.toChannel = description.toChannel
+    this.summary.fromChannel = fromChannel
+    this.summary.toChannel = toChannel
     this.summary.createdOn = moment().format()
 
     // console.log(this.chunkSize)

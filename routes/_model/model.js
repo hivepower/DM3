@@ -1,11 +1,42 @@
 let _ = require('underscore')
-
+let moment = require('moment')
 let MigrateTask = require('./migrate_task.js');
 const Guid = require('guid');
 
 let migrateTasks = {};
 
 module.exports.migrateTasks = migrateTasks; // hashed dict of Promises
+
+
+module.exports.createJobDescription = function(fromChannel, toChannel, chunkSize, influx, delete_source_after_migration) {
+  const guid = Guid.create().value;
+  let description = {}
+  description.guid = guid;
+  description.chunkSize = chunkSize
+  description.delete_source_after_migration = delete_source_after_migration
+  description.summary = {}
+  let summary ={
+    done: false,
+    status : "",
+    fromChannel : "",
+    toChannel : "",
+    createdOn: '',
+    completedOn: '',
+    numberOfPointsProcessed: 0,
+    totalChunks: 0,
+    remianingChunks: 0,
+    writeChunksProcessed: 0
+  }
+  description.summary.status = "Task Created ..."
+  description.summary.fromChannel = fromChannel
+  description.summary.toChannel = toChannel
+  description.summary.createdOn = moment().format()
+  description.summary.completedOn = "NA"
+  migrateTasks[guid] = description
+  return description
+}
+
+
 module.exports.seriesToChannel = function(seriesName) {
   return new Promise((resolve, reject) => {
     if(seriesName == ''){
@@ -50,18 +81,10 @@ module.exports.checkChannelExists = function(channelObject, influx) {
 
 
 
-module.exports.createMigrateTask = function(fromChannel, toChannel, chunkSize, influx, delete_source_after_migration) {
-  const guid = Guid.create().value;
-  let description = {}
-  description.guid = guid;
-  description.fromChannel = fromChannel
-  description.toChannel = toChannel
-  description.chunkSize = chunkSize
-  description.delete_source_after_migration = delete_source_after_migration
-  console.log(guid)
-  task = new MigrateTask(description, influx);
-  migrateTasks[guid] = task
-  return guid
+module.exports.createMigrateTask = function(fromChannel, toChannel, influx, description) {
+  task = new MigrateTask(fromChannel, toChannel, description, influx);
+  migrateTasks[description.guid] = task
+  return description.guid
 }
 
 module.exports.dropDestinationSeries = function(toChannel, influx) {
