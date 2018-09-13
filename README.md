@@ -21,14 +21,14 @@ Set environment variable PORT = 3030
 	     "chunkSize" : 5256000, //time chunk in seconds
        "override_destination" : true, // (or) false //if there is data in the destination override it
        "delete_source_after_migration": true, // (or) false // after migration remove the series from source channel
-       "dbConfig": {... influx python connection config ...}
+       "dbConfig": {... node-influx connection config ...}
   }
   ```
   <br />
   DESCRIPTION : <br />
     POST a job to the server to perform migration. The chunk size is in seconds which sets how much data must be moved in each iteration. If the job submission is successful a guid is generated which can be used to keep track of the job.
     
-    The `dbConfig` parameter should contain [Influx connection information](https://influxdb-python.readthedocs.io/en/latest/api-documentation.html#influxdbclient), for feeding into the InfluxDB Python client 
+    The `dbConfig` parameter should contain [Influx connection information](https://node-influx.github.io/typedef/index.html#static-typedef-ISingleHostConfig), for feeding into the Node-Influx client 
 
 <hr />
 
