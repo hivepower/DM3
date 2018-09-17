@@ -17,6 +17,14 @@ export function post (req, res, next) {
         "chunkSize" "256000000" // time in seconds
         "override_destination" : false // false by default
         "delete_source_after_migration" : false //false by default
+        "dbConfig" : {
+          "host" : <hostname>,
+          "port": <port> 8086?,
+          "username" : <username>,
+          "password": <password>,
+          "database": <database>
+        }
+      }
      }
     */
     //store the body

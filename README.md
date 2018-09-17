@@ -21,11 +21,18 @@ Set environment variable PORT = 3030
 	     "chunkSize" : 5256000 //time chunk in seconds
        "override_destination" : "true" (or) "false" //if there is data in the destination override it
        "delete_source_after_migration": "true" (or) "false" // after migration remove the series from source channel
+       "dbConfig" : {
+         "host" : <hostname>,
+         "port": <port> 8086?,
+         "username" : <username>,
+         "password": <password>,
+         "database": <database>
+       }
   }
   ```
   <br />
   DESCRIPTION : <br />
-    POST a job to the server to perform migration. The chunk size is in seconds which sets how much data must be moved in each iteration. If the job submission is successful a guid is generated which can be used to keep track of the job
+    POST a job to the server to perform migration. The chunk size is in seconds which sets how much data must be moved in each iteration. Provide a connection details of influx server using "dbConfig" in body parameter. If the job submission is successful a guid is generated which can be used to keep track of the job
 
 <hr />
 
