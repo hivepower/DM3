@@ -6,13 +6,14 @@ const _ = require('underscore')
 export function post (req, res, next) {
     console.log(new Date() + "POST: /api/migrationJob")
     /*
+
       Body format :
       {
       	"from": {
-      		seriesName : "level,site=FS-NB-001,generator=edit,units=in, method=,location=,number=1"
+      		seriesName : "flow,generator=edit,location=circ,method=av,number=1,site=LM-ED-041,units=mgd"
       	},
       	"to": {
-      		seriesName : "level,site=FS-NB-001,generator=edit,units=in, method=,location=,number=1"
+      		seriesName : "flow,generator=edit,location=circ,method=av,number=1,site=LM-ED-041,units=mgd"
       	},
         "chunkSize" "256000000" // time in seconds
         "override_destination" : false // false by default

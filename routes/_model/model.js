@@ -34,15 +34,15 @@ module.exports.seriesToChannel = function(seriesName) {
 
     }
     // this function inputs a series name and returns a channelObject
-    // seriesName : "level,site=FS-NB-001,generator=edit,units=in, method=,location=,number=1"
+    //"flow,generator=edit,location=circ,method=av,number=1,site=LM-ED-041,units=mgd"
     let arrayObject = seriesName.split(',')
     let measurement = arrayObject[0]
-    let site = arrayObject[1].split('=')[1]
-    let generator = arrayObject[2].split('=')[1]
-    let units = arrayObject[3].split('=')[1]
-    let method = arrayObject[4].split('=')[1] ? arrayObject[4].split('=')[1] : ''
-    let location = arrayObject[5].split('=')[1] ? arrayObject[5].split('=')[1] : ''
-    let number = arrayObject[6].split('=')[1]
+    let site = arrayObject[5].split('=')[1]
+    let generator = arrayObject[1].split('=')[1]
+    let units = arrayObject[6].split('=')[1]
+    let method = arrayObject[3].split('=')[1] ? arrayObject[4].split('=')[1] : ''
+    let location = arrayObject[2].split('=')[1] ? arrayObject[5].split('=')[1] : ''
+    let number = arrayObject[4].split('=')[1]
     let resObj = { measurement, site, generator, units, method, location, number }
     resolve(resObj)
   })

@@ -13,10 +13,10 @@ Set environment variable PORT = 3030
   ```
   {
 	   "from": {
-		     "seriesName" : "level,site=SITE-002,generator=scada,units=in,method=mousehouse,location=upstream,number=1"
+		     "seriesName" : "flow,generator=edit,location=circular,method=av,number=1,site=LM-ED-041,units=mgd"
 	    },
 	    "to": {
-		     "seriesName" : "level,site=SITE-005,generator=scada,units=in,method=mousehouse,location=upstream,number=1"
+		     "seriesName" : "flow,generator=edit,location=circ,method=av,number=1,site=LM-ED-041,units=mgd"
 	     },
 	     "chunkSize" : 5256000, //time chunk in seconds
        "override_destination" : true, // (or) false //if there is data in the destination override it
