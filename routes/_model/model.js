@@ -40,8 +40,8 @@ module.exports.seriesToChannel = function(seriesName) {
     let site = arrayObject[5].split('=')[1]
     let generator = arrayObject[1].split('=')[1]
     let units = arrayObject[6].split('=')[1]
-    let method = arrayObject[3].split('=')[1] ? arrayObject[4].split('=')[1] : ''
-    let location = arrayObject[2].split('=')[1] ? arrayObject[5].split('=')[1] : ''
+    let method = arrayObject[3].split('=')[1] ? arrayObject[3].split('=')[1] : ''
+    let location = arrayObject[2].split('=')[1] ? arrayObject[2].split('=')[1] : ''
     let number = arrayObject[4].split('=')[1]
     let resObj = { measurement, site, generator, units, method, location, number }
     resolve(resObj)
