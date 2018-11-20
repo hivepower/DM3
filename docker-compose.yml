@@ -3,8 +3,6 @@ services:
     dm3:
         image: dm3
         ports:
-        - "3030:3030"
-        volumes:
-        - /home/srini/datalyzer-measurement-migration-microservice/cfg:/cfg
+        - "3000:3030"
         environment:
-        - PORT=3030
+        - PORT=3000

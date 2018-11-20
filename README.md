@@ -4,7 +4,7 @@ This node application accepts channels and migrates them in influx db.
 
 After submitting a job we get a GUID which can be used to keep track of.
 
-Set environment variable PORT = 3030
+Set environment variable PORT = 3000
 
 # API Specification
 * URL : `http://<serverip>/api/migrationJobs` <br />
