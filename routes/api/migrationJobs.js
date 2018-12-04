@@ -63,6 +63,11 @@ export function post (req, res, next) {
 
       let jobDescription = m.createJobDescription(fromChannel, toChannel, chunkSize, influxConnection, delete_source_after_migration)
 
+      console.log(new Date() + ` From Channel`);
+      console.log(fromChannel);
+      console.log(new Date() + ` To Channel`);
+      console.log(toChannel);
+
       m.checkChannelExists(fromChannel, influxConnection).then((exists) => {
         if(exists) {
           //there is data in source channel. check if there is data in destination
