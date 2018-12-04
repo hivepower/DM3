@@ -16,7 +16,7 @@ export function post (req, res, next) {
       		seriesName : "flow,generator=edit,location=circ,method=av,number=1,site=LM-ED-041,units=mgd"
       	},
         "chunkSize" "256000000" // time in seconds
-        "override_destination" : false // false by default
+        "on_conflict" : 'merge' || 'drop' || 'quit' // quit by default
         "delete_source_after_migration" : false //false by default
         "dbConfig" : {
           "host" : <hostname>,
@@ -34,7 +34,7 @@ export function post (req, res, next) {
     let migrateToSeries = bodyData.to.seriesName;
     let chunkSize = parseInt(bodyData.chunkSize)
     let influxConnection = "";
-    let override_destination = (bodyData.override_destination == 'true')
+    let on_conflict = bodyData.on_conflict ? bodyData.on_conflict : 'quit';
     let delete_source_after_migration = (bodyData.delete_source_after_migration == 'true') // set to false if not set
 
     if(!bodyData.dbConfig) {
@@ -68,9 +68,9 @@ export function post (req, res, next) {
           //there is data in source channel. check if there is data in destination
           m.checkChannelExists(toChannel, influxConnection).then((exists) => {
             if(exists){
-              if(override_destination == true) {
+              if(on_conflict == 'drop') {
                 //drop points here from the series and then call migrate data
-                console.log("Data found in destination ! Dropping series !")
+                console.log(new Date() + "Data found in destination on conflict policy set to drop ! Dropping series !")
                 m.dropDestinationSeries(toChannel, influxConnection).then(() => {
                   let guid = m.createMigrateTask(fromChannel, toChannel, influxConnection, jobDescription)
                   res.status(200).send("Migrate task created, GUID: " + guid)
@@ -81,13 +81,19 @@ export function post (req, res, next) {
                   res.status(500).send(err)
                   res.end()
                 })
-              } else {
+              }
+              else if(on_conflict == 'merge') {
+                console.log(new Date() + ` Data found in destination channel. Conflict policy set to merge. Merging series.`);
+                let guid = m.createMigrateTask(fromChannel, toChannel, influxConnection, jobDescription)
+                res.status(200).send("Migrate task created, GUID: " + guid)
+                res.end()
+              }
+               else {
                 console.log('There is already data in destination channel! Migration failed !')
                 m.migrateTasks[jobDescription.guid].summary.status = "There is already data in destination channel! Migration failed !"
                 res.status(400).send("There is already data in destination channel! Migration failed ! GUID : " + jobDescription.guid);
                 res.end()
               }
-
             } else {
                 let guid = m.createMigrateTask(fromChannel, toChannel, influxConnection, jobDescription)
 

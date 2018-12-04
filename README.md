@@ -19,7 +19,7 @@ Set environment variable PORT = 3000
 		     "seriesName" : "flow,generator=edit,location=circ,method=av,number=1,site=LM-ED-041,units=mgd"
 	     },
 	     "chunkSize" : 5256000, //time chunk in seconds
-       "override_destination" : true, // (or) false //if there is data in the destination override it
+       "on_conflict" : 'merge' || 'drop' || 'quit' // quit by default
        "delete_source_after_migration": true, // (or) false // after migration remove the series from source channel
        "dbConfig": {... node-influx connection config ...}
   }
