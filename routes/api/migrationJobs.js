@@ -42,6 +42,7 @@ export function post (req, res, next) {
       res.status(400).send("Influx connection details missing in bodyData")
       res.end()
     } else {
+      console.log(bodyData.dbConfig);
       influxConnection = new Influx.InfluxDB(bodyData.dbConfig);
     }
 
