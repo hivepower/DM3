@@ -2,6 +2,23 @@ const { DateTime } = require('luxon');
 const _ = require('underscore')
 const moment = require('moment');
 
+
+let make_clauses = function(channelObject) {
+  let q = `"${channelObject.measurement}"`;
+  if (Object.keys(channelObject).length > 1) {
+    q += " where";
+    let and_str = ""
+    for (var k in channelObject) {
+      if (k == "measurement") {
+        continue;
+      }
+      q += `${and_str} "${k}"='${channelObject[k]}'`
+      and_str = " and"
+    }
+  }
+  return q;
+}
+
 let friendlyLoop = (data, initResult,work) => {
   return new Promise((resolve,reject) => {
     const maxIdx = data.length - 1;
@@ -19,7 +36,7 @@ let friendlyLoop = (data, initResult,work) => {
 };
 
 class MigrateTask {
-  constructor(fromChannel, toChannel, description, influx) {
+  constructor(fromChannel, toChannel, description, src_influx, dest_influx) {
     console.log("Migrate task created")
     this.guid = description.guid;
     this.chunkSize = description.chunkSize
@@ -45,8 +62,8 @@ class MigrateTask {
     // console.log(this.chunkSize)
     // need to verify if there is data in the
     this.promise = Promise.resolve(this.summary)
-    .then((d) => this.createChunksForMigration(d, influx)) // create a chunk array which has start and end dates
-    .then((d) => this.beginMigration(d, influx)) // use the chunk array created in previous step and export each month data into CSV
+    .then((d) => this.createChunksForMigration(d, src_influx)) // create a chunk array which has start and end dates
+    .then((d) => this.beginMigration(d, src_influx, dest_influx)) // use the chunk array created in previous step and export each month data into CSV
     .catch((err) => {
       this.summary.done = true
       this.summary.status = "ERROR : " +  err.message
@@ -61,13 +78,8 @@ class MigrateTask {
       let startDate = ""
       let endDate = ""
       let out_dates = []
-      let getFirstDateInflux = `select * from ${fromChannel.measurement} where site = '${fromChannel.site}' and generator = '${fromChannel.generator}'
-      and method = '${fromChannel.method}' and location = '${fromChannel.location}' and number='${fromChannel.number}' and units = '${fromChannel.units}'
-      limit 1`
-
-      let getEndDateInflux = `select * from ${fromChannel.measurement} where site = '${fromChannel.site}' and generator = '${fromChannel.generator}'
-      and method = '${fromChannel.method}' and location = '${fromChannel.location}' and number='${fromChannel.number}' and units = '${fromChannel.units}'
-      order by time desc limit 1`
+      let getFirstDateInflux = "select * from " + make_clauses(fromChannel) + " limit 1";
+      let getEndDateInflux = "select * from " + make_clauses(fromChannel) + " order by time desc limit 1";
 
       Promise.all([influx.query(getFirstDateInflux), influx.query(getEndDateInflux)]).then((values) => {
 
@@ -92,44 +104,27 @@ class MigrateTask {
     })
   }
 
-  beginMigration(summary, influx) {
+  beginMigration(summary, src_influx, dest_influx) {
     return new Promise((migrationResolve, migrationReject) => {
       // here create a promise which calls export task and import task for each month
       let {fromChannel} = summary
       let {toChannel} = summary
-      let tags = _.omit(toChannel, 'measurement')
+      let tagsObj = _.omit(toChannel, 'measurement')
       let migrateDataPromise = Promise.resolve();
       let chunks = this.chunks
-      let tagsObj = {
-      number: this.summary.toChannel.number,
-      units: this.summary.toChannel.units,
-      generator: this.summary.toChannel.generator,
-      site: this.summary.toChannel.site
-      }
-      // the writepoints API will not work if there is a empty tag i.e : method=''
-      // Hence its best we build a list of tag to use it when creating Ipoints object
-      if(toChannel.location) {
-        tagsObj.location = this.summary.toChannel.location
-      }
-      if(toChannel.method) {
-        tagsObj.method = this.summary.toChannel.method
-      }
       this.summary.tagsObj = tagsObj
 
       _.each(chunks, (chunk) => {
         let startDate = chunk['start']
         let endDate = chunk['end']
-        let q = `select value from "${fromChannel.measurement}"
-        where site = '${fromChannel.site}' and generator = '${fromChannel.generator}' and method = '${fromChannel.method}'
-        and location = '${fromChannel.location}' and number='${fromChannel.number}' and units = '${fromChannel.units}'
-        and time >= '${startDate}' and time <= '${endDate}'group by *`;
+        let q = "select value from " + make_clauses(fromChannel) + `and time >= '${startDate}' and time <= '${endDate}'group by *`;
 
         migrateDataPromise = migrateDataPromise.then(() => {
           // var pending = [];
           return new Promise((resolve, reject) => {
-            influx.query(q)
+            src_influx.query(q)
             .then((resultData) => this.createInfluxDBPoints(resultData))
-            .then((points) => this.writeDataToInflux(points, influx))
+            .then((points) => this.writeDataToInflux(points, dest_influx))
             .then(() => resolve())
             .catch((err) => {
               console.log(err)
@@ -141,7 +136,7 @@ class MigrateTask {
       migrateDataPromise.then(() => {
         if(this.delete_source_after_migration) {
           console.log("Deleting source points ...")
-          this.deleteSourceSeries(fromChannel, influx).then((done) => {
+          this.deleteSourceSeries(fromChannel, src_influx).then((done) => {
             if(done) {
               summary.done = true
               summary.status = "Completed"
@@ -161,11 +156,8 @@ class MigrateTask {
 
   deleteSourceSeries(fromChannel, influx) {
     return new Promise((resolve, reject) => {
-      console.log(`drop series from "${fromChannel.measurement}" where "site"='${fromChannel.site}' and "generator"='${fromChannel.generator}'
-      and "units"='${fromChannel.units}' and "method"='${fromChannel.method}' and "location"='${fromChannel.location}' and "number"='${fromChannel.number}'`)
-
-      influx.query(`drop series from "${fromChannel.measurement}" where "site"='${fromChannel.site}' and "generator"='${fromChannel.generator}'
-      and "units"='${fromChannel.units}' and "method"='${fromChannel.method}' and "location"='${fromChannel.location}' and "number"='${fromChannel.number}'`)
+      let drop_q = "drop series from " + make_clauses(fromChannel);
+      influx.query(drop_q)
       .then(() => {
         resolve(true)
       }).catch((err) => {
@@ -238,4 +230,4 @@ class MigrateTask {
   }
 }
 
-module.exports = MigrateTask;
+module.exports = {MigrateTask, make_clauses};

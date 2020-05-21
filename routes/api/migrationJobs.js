@@ -9,33 +9,25 @@ export function post (req, res, next) {
 
       Body format :
       {
-      	"from": {
-      		seriesName : "flow,generator=edit,location=circ,method=av,number=1,site=LM-ED-041,units=mgd"
-      	},
-      	"to": {
-      		seriesName : "flow,generator=edit,location=circ,method=av,number=1,site=LM-ED-041,units=mgd"
-      	},
-        "chunkSize" "256000000" // time in seconds
+        "from": "flow,generator=edit,location=circular,method=av,number=1,site=LM-ED-041,units=mgd",
+        "to": "flow,generator=edit,location=circ,method=av,number=1,site=LM-ED-041,units=mgd",
+        "chunkSize" : 5256000, //time chunk in seconds
         "on_conflict" : 'merge' || 'drop' || 'quit' // quit by default
-        "delete_source_after_migration" : false //false by default
-        "dbConfig" : {
-          "host" : <hostname>,
-          "port": <port> 8086?,
-          "username" : <username>,
-          "password": <password>,
-          "database": <database>
-        }
+        "delete_source_after_migration": true, // (or) false // after migration remove the series from source channel
+        "dbConfig": {... node-influx connection config ...}
       }
-     }
     */
     //store the body
     let bodyData = req.body
-    let migrateFromSeries = bodyData.from.seriesName;
-    let migrateToSeries = bodyData.to.seriesName;
+    let migrateFromSeries = bodyData.from;
+    let migrateToSeries = bodyData.to;
     let chunkSize = parseInt(bodyData.chunkSize)
-    let influxConnection = "";
+    let src_influx;
+    let dest_influx;
     let on_conflict = bodyData.on_conflict ? bodyData.on_conflict : 'quit';
     let delete_source_after_migration = (bodyData.delete_source_after_migration == 'true') // set to false if not set
+
+    console.log(bodyData)
 
     if(!bodyData.dbConfig) {
       res.statusMessage = "Influx connection details missing in bodyData"
@@ -43,7 +35,13 @@ export function post (req, res, next) {
       res.end()
     } else {
       console.log(bodyData.dbConfig);
-      influxConnection = new Influx.InfluxDB(bodyData.dbConfig);
+      src_influx = new Influx.InfluxDB(bodyData.dbConfig);
+      if(bodyData.destinationDb) {
+        dest_influx = new Influx.InfluxDB(bodyData.destinationDb);
+      }
+      else {
+        dest_influx = src_influx;
+      }
     }
 
 
@@ -61,23 +59,23 @@ export function post (req, res, next) {
       let fromChannel = channelObjects[0]
       let toChannel = channelObjects[1]
 
-      let jobDescription = m.createJobDescription(fromChannel, toChannel, chunkSize, influxConnection, delete_source_after_migration)
+      let jobDescription = m.createJobDescription(fromChannel, toChannel, chunkSize, src_influx, dest_influx, delete_source_after_migration)
 
       console.log(new Date() + ` From Channel`);
       console.log(fromChannel);
       console.log(new Date() + ` To Channel`);
       console.log(toChannel);
 
-      m.checkChannelExists(fromChannel, influxConnection).then((exists) => {
+      m.checkChannelExists(fromChannel, src_influx).then((exists) => {
         if(exists) {
           //there is data in source channel. check if there is data in destination
-          m.checkChannelExists(toChannel, influxConnection).then((exists) => {
+          m.checkChannelExists(toChannel, dest_influx).then((exists) => {
             if(exists){
               if(on_conflict == 'drop') {
                 //drop points here from the series and then call migrate data
                 console.log(new Date() + "Data found in destination on conflict policy set to drop ! Dropping series !")
-                m.dropDestinationSeries(toChannel, influxConnection).then(() => {
-                  let guid = m.createMigrateTask(fromChannel, toChannel, influxConnection, jobDescription)
+                m.dropDestinationSeries(toChannel, dest_influx).then(() => {
+                  let guid = m.createMigrateTask(fromChannel, toChannel, src_influx, dest_influx, jobDescription)
                   res.status(200).send("Migrate task created, GUID: " + guid)
                   res.end()
                 }).catch((err) => {
@@ -89,7 +87,7 @@ export function post (req, res, next) {
               }
               else if(on_conflict == 'merge') {
                 console.log(new Date() + ` Data found in destination channel. Conflict policy set to merge. Merging series.`);
-                let guid = m.createMigrateTask(fromChannel, toChannel, influxConnection, jobDescription)
+                let guid = m.createMigrateTask(fromChannel, toChannel, src_influx, dest_influx, jobDescription)
                 res.status(200).send("Migrate task created, GUID: " + guid)
                 res.end()
               }
@@ -100,7 +98,7 @@ export function post (req, res, next) {
                 res.end()
               }
             } else {
-                let guid = m.createMigrateTask(fromChannel, toChannel, influxConnection, jobDescription)
+                let guid = m.createMigrateTask(fromChannel, toChannel, src_influx, dest_influx, jobDescription)
 
                 res.status(200).send("Migrate task created, GUID: " + guid)
                 res.end()

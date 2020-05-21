@@ -25,22 +25,10 @@
 							{job[1].summary.status}
 						</td>
 						<td class="wrap-col">
-							Measure={job[1].summary.fromChannel.measurement},
-							Site={job[1].summary.fromChannel.site}
-							Generator={job[1].summary.fromChannel.generator},
-							Units={job[1].summary.fromChannel.units},
-							Method={job[1].summary.fromChannel.method},
-							Location={job[1].summary.fromChannel.location},
-							Number={job[1].summary.fromChannel.number}
+							Series={JSON.stringify(job[1].summary.fromChannel)}
 						</td>
 						<td class="wrap-col">
-							Measure={job[1].summary.toChannel.measurement},
-							Site={job[1].summary.toChannel.site}
-							Generator={job[1].summary.toChannel.generator},
-							Units={job[1].summary.toChannel.units},
-							Method={job[1].summary.toChannel.method},
-							Location={job[1].summary.toChannel.location},
-							Number={job[1].summary.toChannel.number}
+							Series={JSON.stringify(job[1].summary.toChannel)}
 						</td>
 						<td class="vertical_center_align">
 						{	job[1].summary.totalChunks}

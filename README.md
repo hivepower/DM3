@@ -12,16 +12,13 @@ Set environment variable PORT = 3000
   POST BODY : <br />
   ```
   {
-	   "from": {
-		     "seriesName" : "flow,generator=edit,location=circular,method=av,number=1,site=LM-ED-041,units=mgd"
-	    },
-	    "to": {
-		     "seriesName" : "flow,generator=edit,location=circ,method=av,number=1,site=LM-ED-041,units=mgd"
-	     },
-	     "chunkSize" : 5256000, //time chunk in seconds
-       "on_conflict" : 'merge' || 'drop' || 'quit' // quit by default
-       "delete_source_after_migration": true, // (or) false // after migration remove the series from source channel
-       "dbConfig": {... node-influx connection config ...}
+    "from": "flow,generator=edit,location=circular,method=av,number=1,site=LM-ED-041,units=mgd",
+    "to": "flow,generator=edit,location=circ,method=av,number=1,site=LM-ED-041,units=mgd",
+    "chunkSize" : 5256000, //time chunk in seconds
+    "on_conflict" : 'merge' || 'drop' || 'quit' // quit by default
+    "delete_source_after_migration": true, // (or) false // after migration remove the series from source channel
+    "dbConfig": {... node-influx connection config ...},
+    "destinationDb": {... node-influx connection config ...} // optional, defaults to same db
   }
   ```
   <br />

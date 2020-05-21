@@ -1,6 +1,6 @@
 let _ = require('underscore')
 let moment = require('moment')
-let MigrateTask = require('./migrate_task.js');
+let {MigrateTask, make_clauses} = require('./migrate_task.js');
 const Guid = require('guid');
 
 let migrateTasks = {};
@@ -8,7 +8,7 @@ let migrateTasks = {};
 module.exports.migrateTasks = migrateTasks; // hashed dict of Promises
 
 
-module.exports.createJobDescription = function(fromChannel, toChannel, chunkSize, influx, delete_source_after_migration) {
+module.exports.createJobDescription = function(fromChannel, toChannel, chunkSize, src_influx, dest_influx, delete_source_after_migration) {
   const guid = Guid.create().value;
   let description = {}
   description.guid = guid;
@@ -31,19 +31,16 @@ module.exports.seriesToChannel = function(seriesName) {
   return new Promise((resolve, reject) => {
     if(seriesName == ''){
       console.log("Series name is empty")
-
+      reject("series name empty");
     }
     // this function inputs a series name and returns a channelObject
     //"flow,generator=edit,location=circ,method=av,number=1,site=LM-ED-041,units=mgd"
-    let arrayObject = seriesName.split(',')
-    let measurement = arrayObject[0]
-    let site = arrayObject[5].split('=')[1]
-    let generator = arrayObject[1].split('=')[1]
-    let units = arrayObject[6].split('=')[1]
-    let method = arrayObject[3].split('=')[1] ? arrayObject[3].split('=')[1] : ''
-    let location = arrayObject[2].split('=')[1] ? arrayObject[2].split('=')[1] : ''
-    let number = arrayObject[4].split('=')[1]
-    let resObj = { measurement, site, generator, units, method, location, number }
+    let series_tags = seriesName.split(',');
+    let resObj = { measurement: series_tags.shift() };
+    _.each(series_tags, (t_pair) => {
+      kv = t_pair.split('=');
+      resObj[kv[0]] = kv[1];
+    });
     resolve(resObj)
   })
 
@@ -52,8 +49,8 @@ module.exports.seriesToChannel = function(seriesName) {
 module.exports.checkChannelExists = function(channelObject, influx) {
   // query the influx db and see if the channel exists
   return new Promise((resolve, reject) => {
-    influx.query(`select count(*) from "${channelObject.measurement}" where "site"='${channelObject.site}' and "generator"='${channelObject.generator}'
-    and "units"='${channelObject.units}' and "method"='${channelObject.method}' and "location"='${channelObject.location}' and "number"='${channelObject.number}'`)
+    q = "select count(*) from " + make_clauses(channelObject);
+    influx.query(q)
     .then((res) => {
       if( res[0] ){
         if(res[0].count_value > 0) {
@@ -71,16 +68,16 @@ module.exports.checkChannelExists = function(channelObject, influx) {
 
 
 
-module.exports.createMigrateTask = function(fromChannel, toChannel, influx, description) {
-  task = new MigrateTask(fromChannel, toChannel, description, influx);
+module.exports.createMigrateTask = function(fromChannel, toChannel, src_influx, dest_influx, description) {
+  task = new MigrateTask(fromChannel, toChannel, description, src_influx, dest_influx);
   migrateTasks[description.guid] = task
   return description.guid
 }
 
-module.exports.dropDestinationSeries = function(toChannel, influx) {
+module.exports.dropDestinationSeries = function(channel, influx) {
   return new Promise((resolve, reject) => {
-    influx.query(`drop series from "${toChannel.measurement}" where "site"='${toChannel.site}' and "generator"='${toChannel.generator}'
-    and "units"='${toChannel.units}' and "method"='${toChannel.method}' and "location"='${toChannel.location}' and "number"='${toChannel.number}'`)
+    let q = "drop series from " + make_clauses(channel);
+    influx.query(q)
     .then(() => {
       resolve(true)
     }).catch((err) => {
