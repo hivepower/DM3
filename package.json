@@ -26,7 +26,7 @@
     "polka": "^0.4.0",
     "popper": "^1.0.1",
     "popper.js": "^1.14.4",
-    "sapper": "^0.15.0",
+    "sapper": "^0.27.11",
     "sirv": "^0.1.1",
     "style-loader": "^0.22.1",
     "underscore": "^1.9.1"
