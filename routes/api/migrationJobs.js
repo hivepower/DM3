@@ -25,7 +25,7 @@ export function post (req, res, next) {
     let src_influx;
     let dest_influx;
     let on_conflict = bodyData.on_conflict ? bodyData.on_conflict : 'quit';
-    let delete_source_after_migration = (bodyData.delete_source_after_migration == 'true') // set to false if not set
+    let delete_source_after_migration = (bodyData.delete_source_after_migration == true) // set to false if not set
 
     console.log(bodyData)
 
