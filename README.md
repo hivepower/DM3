@@ -31,6 +31,14 @@ Set environment variable PORT = 3000
 
   The `dbConfig` parameter should contain [Influx connection information](https://node-influx.github.io/typedef/index.html#static-typedef-ISingleHostConfig), for feeding into the Node-Influx client
 
+  'KEEP TAGS' MODE:
+
+  With the regular operation of DM3 - without 'keep_tags' flag set - you have to explicitly define all the tags of the new series and any previously set tag will be discarded.
+
+  But there are times you might want to rewrite only some tags from a group of series or even the from the whole measurement. You might also want to delete a tag altogether. In that case, you should make use of the 'keep_tags' feature, which is ideal in **migrations and data refactoring scenarios**.
+
+  In this mode, tags defined in 'from' field describes the WHERE clause and tags defined in the 'to' field will **extend and preserve** the original ones. In case you wish to remove a tag, just set it empty, ex.: "meter="
+
 <hr />
 
 - URL : `http://<serverip>/api/migrationJobs` <br />
