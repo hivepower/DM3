@@ -4,8 +4,8 @@ const moment = require("moment");
 
 let make_clauses = function (channelObject) {
   let q = `"${channelObject.measurement}"`;
+  q += " where 1=1 ";
   if (Object.keys(channelObject).length > 1) {
-    q += " where";
     let and_str = "";
     for (var k in channelObject) {
       if (k == "measurement") {
@@ -130,7 +130,7 @@ class MigrateTask {
         let q =
           "select value from " +
           make_clauses(fromChannel) +
-          `and time >= '${startDate}' and time <= '${endDate}'group by *`;
+          `and time >= '${startDate}' and time <= '${endDate}' group by *`;
 
         migrateDataPromise = migrateDataPromise.then(() => {
           // var pending = [];
